@@ -33,7 +33,7 @@ export default function StartPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-5xl px-4 py-8">
-      <header className="mb-6 flex items-center justify-end">
+      <header className="relative z-10 mb-6 flex items-center justify-end">
         <ThemeSwitcher activeId={state.themeId} onSelect={(id) => patch({ themeId: id })} onImport={importTheme} />
       </header>
       <BentoGrid

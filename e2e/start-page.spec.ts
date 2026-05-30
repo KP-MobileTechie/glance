@@ -20,14 +20,12 @@ test('adding a bookmark persists after reload', async ({ page }) => {
 test('switching theme changes the background variable', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /themes/i }).click();
-  const paperCalmBtn = page.getByRole('button', { name: /paper calm/i });
-  await expect(paperCalmBtn).toBeVisible();
-  // The theme dropdown sits below the react-grid-layout overlay; trigger click via JS
-  await paperCalmBtn.dispatchEvent('click');
-  await expect(async () => {
-    const bg = await page.evaluate(() =>
-      getComputedStyle(document.documentElement).getPropertyValue('--glance-bg').trim(),
-    );
-    expect(bg).toBe('#f4f1ec');
-  }).toPass({ timeout: 5000 });
+  await page.getByRole('button', { name: /paper calm/i }).click();
+  await expect
+    .poll(async () =>
+      page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue('--glance-bg').trim(),
+      ),
+    )
+    .toBe('#f4f1ec');
 });

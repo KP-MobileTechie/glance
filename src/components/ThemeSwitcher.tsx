@@ -30,7 +30,7 @@ export function ThemeSwitcher({ activeId, onSelect, onImport }: ThemeSwitcherPro
         <IconPalette /> themes
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-60 rounded-xl border p-3"
+        <div className="absolute right-0 mt-2 w-60 rounded-xl border p-3 z-50"
           style={{ background: 'var(--glance-bg)', borderColor: 'var(--glance-border)' }}>
           <div className="flex flex-col gap-1">
             {BUILT_IN_THEMES.map((t) => (
