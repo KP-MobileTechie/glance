@@ -28,3 +28,26 @@ export async function fetchWeather(lat: number, lon: number): Promise<Weather> {
   if (!res.ok) throw new Error('Weather request failed');
   return parseWeather(await res.json());
 }
+
+export interface GeoResult { lat: number; lon: number; name: string; }
+
+export function parseGeocode(json: unknown): GeoResult {
+  const results = (json as { results?: Array<{ latitude?: number; longitude?: number; name?: string }> }).results;
+  const first = results && results[0];
+  if (!first || typeof first.latitude !== 'number' || typeof first.longitude !== 'number') {
+    throw new Error('City not found');
+  }
+  return { lat: first.latitude, lon: first.longitude, name: first.name ?? '' };
+}
+
+export async function geocodeCity(city: string): Promise<GeoResult> {
+  const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+  if (!res.ok) throw new Error('Geocode request failed');
+  return parseGeocode(await res.json());
+}
+
+export async function fetchWeatherByCity(city: string): Promise<{ weather: Weather; geo: GeoResult }> {
+  const geo = await geocodeCity(city);
+  const weather = await fetchWeather(geo.lat, geo.lon);
+  return { weather, geo };
+}

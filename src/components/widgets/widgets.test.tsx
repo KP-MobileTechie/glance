@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { defaultState } from '@/lib/store/types';
 import { WIDGET_REGISTRY } from './registry';
 import { ClockWidget } from './ClockWidget';
 import { FocusWidget } from './FocusWidget';
 import { BookmarksWidget } from './BookmarksWidget';
+import { WeatherQuoteWidget } from './WeatherQuoteWidget';
 
 describe('widget registry', () => {
   it('has an entry for every widget kind', () => {
@@ -47,5 +48,64 @@ describe('BookmarksWidget', () => {
         bookmarks: [expect.objectContaining({ label: 'GitHub', url: 'https://github.com' })],
       }),
     );
+  });
+});
+
+describe('FocusWidget todos', () => {
+  it('adds a todo when typing and pressing Enter', async () => {
+    const onChange = vi.fn();
+    render(<FocusWidget state={defaultState()} onChange={onChange} />);
+    const add = screen.getByPlaceholderText(/add a task/i);
+    await userEvent.type(add, 'write tests{Enter}');
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        todos: [expect.objectContaining({ text: 'write tests', done: false })],
+      }),
+    );
+  });
+
+  it('toggles a todo done state', async () => {
+    const onChange = vi.fn();
+    const state = { ...defaultState(), todos: [{ id: 't1', text: 'ship it', done: false }] };
+    render(<FocusWidget state={state} onChange={onChange} />);
+    await userEvent.click(screen.getByRole('checkbox', { name: /toggle ship it/i }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ todos: [expect.objectContaining({ id: 't1', done: true })] }),
+    );
+  });
+
+  it('removes a todo', async () => {
+    const onChange = vi.fn();
+    const state = { ...defaultState(), todos: [{ id: 't1', text: 'old task', done: false }] };
+    render(<FocusWidget state={state} onChange={onChange} />);
+    await userEvent.click(screen.getByRole('button', { name: /remove old task/i }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ todos: [] }));
+  });
+});
+
+describe('WeatherQuoteWidget city fallback', () => {
+  it('lets the user enter a city when geolocation is unavailable and persists it', async () => {
+    // jsdom has no navigator.geolocation, so we stub it to call the error callback
+    // to guarantee the denied path runs deterministically
+    vi.stubGlobal('navigator', {
+      ...navigator,
+      geolocation: {
+        getCurrentPosition: (_s: PositionCallback, e: PositionErrorCallback) =>
+          e({} as GeolocationPositionError),
+      },
+    });
+    const fetchMock = vi.fn((url: unknown) => {
+      if (String(url).includes('geocoding-api')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ results: [{ latitude: 51.5, longitude: -0.12, name: 'London' }] }) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ current: { temperature_2m: 12, weather_code: 3 } }) });
+    });
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    const onChange = vi.fn();
+    render(<WeatherQuoteWidget state={defaultState()} onChange={onChange} />);
+    const input = await screen.findByPlaceholderText(/enter your city/i);
+    await userEvent.type(input, 'London{Enter}');
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ weatherCity: 'London' })));
+    vi.unstubAllGlobals();
   });
 });
