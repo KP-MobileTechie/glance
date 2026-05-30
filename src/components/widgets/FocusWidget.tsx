@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { WidgetProps } from './ClockWidget';
 import type { Todo } from '@/lib/store/types';
 import { IconFocus } from '@/components/icons/icons';
@@ -7,7 +7,17 @@ import { IconFocus } from '@/components/icons/icons';
 export function FocusWidget({ state, onChange }: WidgetProps) {
   const [value, setValue] = useState(state.focus);
   const [draft, setDraft] = useState('');
+  const listRef = useRef<HTMLUListElement>(null);
+  const prevLen = useRef(state.todos.length);
   useEffect(() => { setValue(state.focus); }, [state.focus]);
+
+  // When a task is added, scroll the list to reveal the new item at the bottom.
+  useEffect(() => {
+    if (state.todos.length > prevLen.current && listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+    prevLen.current = state.todos.length;
+  }, [state.todos.length]);
 
   function addTodo() {
     const text = draft.trim();
@@ -33,7 +43,7 @@ export function FocusWidget({ state, onChange }: WidgetProps) {
         onChange={(e) => setValue(e.target.value)}
         onBlur={() => { if (value !== state.focus) onChange({ focus: value }); }}
       />
-      <ul className="glance-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1.5">
+      <ul ref={listRef} className="glance-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1.5">
         {state.todos.length === 0 && (
           <li className="text-xs italic" style={{ color: 'color-mix(in oklab, var(--glance-muted) 60%, transparent)' }}>
             no tasks yet
