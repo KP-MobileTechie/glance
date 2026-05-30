@@ -33,13 +33,22 @@ export function WeatherQuoteWidget({ state, onChange }: WidgetProps) {
 
   return (
     <div className="flex h-full flex-col justify-between gap-3">
-      <div className="text-sm" style={{ color: 'var(--glance-muted)' }}>
-        {weather ? `${weather.tempC}deg ${weather.label}` : denied ? 'weather unavailable' : 'locating...'}
+      <div>
+        <div className="glance-label">weather</div>
+        <div className="mt-2 flex items-baseline gap-2">
+          {weather ? (
+            <>
+              <span style={{ color: 'var(--glance-accent)', fontSize: '1.6rem', fontWeight: 300, textShadow: '0 0 18px var(--glance-accent-glow)' }}>{weather.tempC}&deg;</span>
+              <span className="text-sm" style={{ color: 'var(--glance-muted)' }}>{weather.label}</span>
+            </>
+          ) : (
+            <span className="text-sm" style={{ color: 'var(--glance-muted)' }}>{denied ? 'weather unavailable' : 'locating...'}</span>
+          )}
+        </div>
       </div>
       {denied && !weather && (
         <input
-          className="w-full bg-transparent text-xs outline-none"
-          style={{ color: 'var(--glance-text)' }}
+          className="glance-input text-xs"
           placeholder="enter your city"
           value={city}
           onChange={(e) => setCity(e.target.value)}
@@ -47,7 +56,10 @@ export function WeatherQuoteWidget({ state, onChange }: WidgetProps) {
           aria-label="enter your city"
         />
       )}
-      <blockquote className="text-xs italic" style={{ color: 'var(--glance-muted)' }}>
+      <blockquote
+        className="text-xs italic"
+        style={{ color: 'var(--glance-muted)', borderLeft: '2px solid color-mix(in oklab, var(--glance-accent) 60%, transparent)', paddingLeft: '0.65rem' }}
+      >
         &ldquo;{quote.text}&rdquo; &mdash; {quote.author}
       </blockquote>
     </div>

@@ -21,26 +21,24 @@ export function BookmarksWidget({ state, onChange }: WidgetProps) {
 
   return (
     <div className="flex h-full flex-col gap-3">
+      <div className="glance-label">quick launch</div>
       <div className="flex flex-wrap gap-2">
         {state.bookmarks.map((b) => (
-          <a key={b.id} href={b.url} target="_blank" rel="noopener noreferrer" className="rounded-lg border px-3 py-1 text-sm"
-             style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-text)' }}>
+          <a key={b.id} href={b.url} target="_blank" rel="noopener noreferrer" className="glance-chip glance-bookmark">
+            <span className="glance-mono-badge" aria-hidden="true">{b.label.charAt(0).toUpperCase()}</span>
             {b.label}
           </a>
         ))}
-        <button onClick={() => setAdding(true)} aria-label="add bookmark"
-          className="rounded-lg border px-3 py-1 text-sm" style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-muted)' }}>
+        <button onClick={() => setAdding(true)} aria-label="add bookmark" className="glance-chip">
           + add
         </button>
       </div>
       {adding && (
-        <div className="flex flex-wrap gap-2">
-          <input placeholder="label" value={label} onChange={(e) => setLabel(e.target.value)}
-            className="rounded border bg-transparent px-2 py-1 text-sm" style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-text)' }} />
-          <input placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)}
-            className="rounded border bg-transparent px-2 py-1 text-sm" style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-text)' }} />
-          <button onClick={save} className="rounded px-3 py-1 text-sm" style={{ background: 'var(--glance-accent)', color: 'var(--glance-bg)' }}>save</button>
-          <button onClick={cancel} className="rounded border px-3 py-1 text-sm" style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-muted)' }}>cancel</button>
+        <div className="flex flex-wrap items-center gap-2">
+          <input placeholder="label" value={label} onChange={(e) => setLabel(e.target.value)} className="glance-field" style={{ width: '6.5rem' }} />
+          <input placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)} className="glance-field" style={{ flex: '1 1 9rem' }} />
+          <button onClick={save} className="glance-btn-primary text-sm">save</button>
+          <button onClick={cancel} className="glance-chip">cancel</button>
         </div>
       )}
     </div>

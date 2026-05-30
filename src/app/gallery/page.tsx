@@ -26,9 +26,9 @@ export default function GalleryPage() {
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl">Theme gallery</h1>
-        <Link href="/" className="text-sm" style={{ color: 'var(--glance-muted)' }}>back to Glance</Link>
+      <div className="mb-10 flex items-center justify-between">
+        <h1 className="glance-display text-3xl"><span className="glance-aurora-text">Theme gallery</span></h1>
+        <Link href="/" className="glance-nav">back to Glance</Link>
       </div>
       {!client ? (
         <p className="text-sm" style={{ color: 'var(--glance-muted)' }}>

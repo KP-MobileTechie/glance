@@ -12,15 +12,13 @@ export function AuthButton({ enabled, user, onSignIn, onSignOut }: AuthButtonPro
   if (!enabled) return null;
   if (!user) {
     return (
-      <button onClick={onSignIn} className="rounded-lg border px-3 py-1 text-sm"
-        style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-text)' }}>
+      <button onClick={onSignIn} className="glance-chip">
         sign in with GitHub
       </button>
     );
   }
   return (
-    <button onClick={onSignOut} className="rounded-lg border px-3 py-1 text-sm"
-      style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-muted)' }}>
+    <button onClick={onSignOut} className="glance-chip">
       sign out
     </button>
   );
