@@ -21,13 +21,14 @@ export async function listPublicThemes(client: SupabaseClient): Promise<GalleryT
 }
 
 export async function publishTheme(client: SupabaseClient, userId: string, theme: Theme): Promise<void> {
-  await client.from(TABLE).insert({
+  const { error } = await client.from(TABLE).insert({
     author_id: userId,
     name: theme.name,
     theme,
     is_public: true,
     use_count: 0,
   });
+  if (error) throw error;
 }
 
 export async function incrementUseCount(client: SupabaseClient, themeId: string): Promise<void> {

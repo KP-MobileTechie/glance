@@ -20,4 +20,12 @@ describe('gallery', () => {
       expect.objectContaining({ author_id: 'user-1', name: 'Mine', is_public: true }),
     );
   });
+
+  it('publishTheme throws when the insert fails', async () => {
+    const insert = vi.fn().mockResolvedValue({ error: { message: 'rls denied' } });
+    const client = { from: vi.fn(() => ({ insert })) };
+    await expect(
+      publishTheme(client as never, 'user-1', { ...getTheme('paper-calm'), id: 'c2', name: 'Bad' }),
+    ).rejects.toBeTruthy();
+  });
 });

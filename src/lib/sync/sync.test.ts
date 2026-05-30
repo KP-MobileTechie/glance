@@ -31,4 +31,19 @@ describe('syncState', () => {
     expect(merged.userName).toBe('local');
     expect(upsert).toHaveBeenCalled();
   });
+
+  it('does not push when remote is newer, returns remote', async () => {
+    const local = { ...defaultState(), userName: 'local', updatedAt: 100 };
+    const remoteRow = { state: { ...defaultState(), userName: 'remote', updatedAt: 500 } };
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    const client = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: remoteRow, error: null }) })) })),
+        upsert,
+      })),
+    };
+    const merged = await syncState(client as never, 'user-1', local);
+    expect(merged.userName).toBe('remote');
+    expect(upsert).not.toHaveBeenCalled();
+  });
 });

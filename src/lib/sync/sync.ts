@@ -15,13 +15,14 @@ export async function pullState(client: SupabaseClient, userId: string): Promise
 }
 
 export async function pushState(client: SupabaseClient, userId: string, state: AppState): Promise<void> {
-  await client.from(TABLE).upsert({ user_id: userId, state, updated_at: new Date(state.updatedAt).toISOString() });
+  const { error } = await client.from(TABLE).upsert({ user_id: userId, state, updated_at: new Date(state.updatedAt).toISOString() });
+  if (error) throw error;
 }
 
 export async function syncState(client: SupabaseClient, userId: string, local: AppState): Promise<AppState> {
   const remote = await pullState(client, userId);
   const merged = mergeStates(local, remote);
-  if (!remote || merged.updatedAt >= (remote.updatedAt ?? 0)) {
+  if (!remote || merged.updatedAt > remote.updatedAt) {
     await pushState(client, userId, merged);
   }
   return merged;
