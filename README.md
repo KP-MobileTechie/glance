@@ -39,3 +39,14 @@ Open http://localhost:3000 to use Glance. The marketing page lives at /welcome.
 ## License
 
 MIT
+
+## Cloud sync (optional)
+
+Glance works fully offline with no account. To enable cross device sync and the public theme gallery, connect a Supabase project:
+
+1. Create a project at supabase.com and enable the GitHub auth provider (register a GitHub OAuth app, set the callback to your Supabase auth callback URL).
+2. Run the SQL in `supabase/migrations/0001_init.sql` in the Supabase SQL editor.
+3. Copy `.env.example` to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from your project settings.
+4. Restart the dev server. A "sign in with GitHub" button and a theme gallery will appear.
+
+Without these variables the app simply stays local only.
