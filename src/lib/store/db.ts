@@ -19,3 +19,7 @@ export function getDB() {
 }
 
 export const STATE_KEY = 'state';
+
+export function resetDB() {
+  dbPromise = null;
+}

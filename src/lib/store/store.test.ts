@@ -1,9 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { loadState, saveState, updateState } from './store';
 import { defaultState } from './types';
+import { resetDB } from './db';
+import FDBFactory from 'fake-indexeddb/lib/FDBFactory';
 
 beforeEach(async () => {
-  indexedDB.deleteDatabase('glance');
+  // Replace the global indexedDB with a fresh in-memory instance so each
+  // test starts from a completely clean slate without leftover connections.
+  (globalThis as Record<string, unknown>).indexedDB = new FDBFactory();
+  resetDB();
 });
 
 describe('store', () => {
