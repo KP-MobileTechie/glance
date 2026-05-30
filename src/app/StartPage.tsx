@@ -13,6 +13,7 @@ import { syncState } from '@/lib/sync/sync';
 import { AuthButton } from '@/components/AuthButton';
 import Link from 'next/link';
 import { publishTheme } from '@/lib/gallery/gallery';
+import { IconLogo } from '@/components/icons/icons';
 
 export default function StartPage() {
   const [state, setState] = useState<AppState | null>(null);
@@ -60,16 +61,22 @@ export default function StartPage() {
   if (!state) return <main className="min-h-screen" />;
 
   return (
-    <main className="mx-auto min-h-screen max-w-5xl px-4 py-8">
-      <header className="relative z-10 mb-6 flex items-center justify-end gap-3">
-        <Link href="/gallery" className="text-sm" style={{ color: 'var(--glance-muted)' }}>gallery</Link>
-        <AuthButton enabled={auth.enabled} user={auth.user} onSignIn={auth.signIn} onSignOut={auth.signOut} />
-        <ThemeSwitcher
-          activeId={state.themeId}
-          onSelect={(id) => patch({ themeId: id })}
-          onImport={importTheme}
-          onPublish={auth.user ? handlePublish : undefined}
-        />
+    <main className="mx-auto min-h-screen max-w-5xl px-5 py-10">
+      <header className="relative z-10 mb-9 flex items-center justify-between gap-3">
+        <span className="glance-wordmark text-lg">
+          <span className="glance-logo"><IconLogo /></span>
+          glance
+        </span>
+        <div className="flex items-center gap-3">
+          <Link href="/gallery" className="glance-nav">gallery</Link>
+          <AuthButton enabled={auth.enabled} user={auth.user} onSignIn={auth.signIn} onSignOut={auth.signOut} />
+          <ThemeSwitcher
+            activeId={state.themeId}
+            onSelect={(id) => patch({ themeId: id })}
+            onImport={importTheme}
+            onPublish={auth.user ? handlePublish : undefined}
+          />
+        </div>
       </header>
       <BentoGrid
         state={state}

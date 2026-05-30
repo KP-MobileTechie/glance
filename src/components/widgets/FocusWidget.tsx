@@ -25,29 +25,25 @@ export function FocusWidget({ state, onChange }: WidgetProps) {
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wide" style={{ color: 'var(--glance-muted)' }}>
-        <IconFocus /> today&apos;s focus
-      </div>
+      <div className="glance-label"><IconFocus /> today&apos;s focus</div>
       <input
-        className="w-full bg-transparent text-lg outline-none"
-        style={{ color: 'var(--glance-text)' }}
+        className="glance-input text-lg"
         placeholder="your main focus today"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onBlur={() => { if (value !== state.focus) onChange({ focus: value }); }}
       />
-      <ul className="flex flex-col gap-1">
+      <ul className="flex flex-col gap-2 overflow-auto">
         {state.todos.map((t) => (
-          <li key={t.id} className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={t.done} onChange={() => toggle(t.id)} aria-label={`toggle ${t.text}`} />
-            <span style={{ color: 'var(--glance-text)', textDecoration: t.done ? 'line-through' : 'none', opacity: t.done ? 0.6 : 1 }}>{t.text}</span>
-            <button onClick={() => remove(t.id)} aria-label={`remove ${t.text}`} className="ml-auto text-xs" style={{ color: 'var(--glance-muted)' }}>x</button>
+          <li key={t.id} className="flex items-center gap-2.5 text-sm">
+            <input type="checkbox" className="glance-check" checked={t.done} onChange={() => toggle(t.id)} aria-label={`toggle ${t.text}`} />
+            <span style={{ color: 'var(--glance-text)', textDecoration: t.done ? 'line-through' : 'none', opacity: t.done ? 0.5 : 1 }}>{t.text}</span>
+            <button onClick={() => remove(t.id)} aria-label={`remove ${t.text}`} className="glance-todo-remove ml-auto text-base leading-none">&times;</button>
           </li>
         ))}
       </ul>
       <input
-        className="w-full bg-transparent text-sm outline-none"
-        style={{ color: 'var(--glance-text)' }}
+        className="glance-input text-sm mt-auto"
         placeholder="add a task"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}

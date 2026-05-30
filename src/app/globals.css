@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Glance design system. All polish is keyed to the theme
+   variables below, so every theme (including the light Paper
+   Calm one, whose accent-glow is transparent) stays coherent.
+   ============================================================ */
+
 :root {
   --glance-bg: #07080d;
   --glance-surface: rgba(125, 211, 252, 0.04);
@@ -8,12 +14,325 @@
   --glance-accent: #5eead4;
   --glance-accent-glow: rgba(94, 234, 212, 0.55);
   --glance-border: rgba(125, 211, 252, 0.18);
-  --glance-font: ui-monospace, monospace;
+  --glance-font: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --glance-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
   --glance-radius: 14px;
 }
 
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
 body {
-  background: var(--glance-bg);
+  min-height: 100vh;
   color: var(--glance-text);
   font-family: var(--glance-font);
+  background-color: var(--glance-bg);
+  /* Layered atmosphere: an aurora glow from the top plus a faint
+     engineering grid. Both fade out on themes with a transparent
+     accent-glow / low-contrast border. */
+  background-image:
+    radial-gradient(125% 75% at 50% -15%, var(--glance-accent-glow) 0%, transparent 55%),
+    linear-gradient(to right, color-mix(in oklab, var(--glance-border) 45%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--glance-border) 45%, transparent) 1px, transparent 1px);
+  background-size: 100% 100%, 48px 48px, 48px 48px;
+  background-position: center top;
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fine film grain so flat areas never look plasticky. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Keep app content above the grain layer. */
+main { position: relative; z-index: 1; }
+
+::selection { background: var(--glance-accent); color: var(--glance-bg); }
+
+/* ---------- Wordmark + nav ---------- */
+
+.glance-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--glance-mono);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--glance-text);
+}
+.glance-wordmark .glance-logo {
+  color: var(--glance-accent);
+  filter: drop-shadow(0 0 10px var(--glance-accent-glow));
+}
+
+.glance-nav {
+  font-family: var(--glance-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--glance-muted);
+  text-decoration: none;
+  padding: 0.35rem 0.2rem;
+  border-bottom: 1px solid transparent;
+  transition: color .2s, border-color .2s;
+}
+.glance-nav:hover { color: var(--glance-text); border-bottom-color: var(--glance-accent); }
+
+/* ---------- Chips, buttons, inputs ---------- */
+
+.glance-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--glance-mono);
+  font-size: 0.8rem;
+  color: var(--glance-text);
+  background: color-mix(in oklab, var(--glance-surface) 100%, transparent);
+  border: 1px solid var(--glance-border);
+  border-radius: 0.6rem;
+  padding: 0.4rem 0.7rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .18s, border-color .2s, box-shadow .2s, color .2s, background .2s;
+}
+.glance-chip:hover {
+  color: var(--glance-accent);
+  border-color: color-mix(in oklab, var(--glance-accent) 55%, var(--glance-border));
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--glance-accent) 22%, transparent),
+              0 8px 22px -14px var(--glance-accent-glow);
+  transform: translateY(-1px);
+}
+
+.glance-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-family: var(--glance-mono);
+  font-weight: 500;
+  color: var(--glance-bg);
+  background: var(--glance-accent);
+  border: none;
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 10px 30px -12px var(--glance-accent-glow);
+  transition: transform .18s, box-shadow .2s, filter .2s;
+}
+.glance-btn-primary:hover { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 14px 36px -10px var(--glance-accent-glow); }
+
+.glance-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--glance-border);
+  color: var(--glance-text);
+  font-family: var(--glance-font);
+  padding: 0.35rem 0;
+  outline: none;
+  caret-color: var(--glance-accent);
+  transition: border-color .2s, box-shadow .2s;
+}
+.glance-input::placeholder { color: color-mix(in oklab, var(--glance-muted) 60%, transparent); }
+.glance-input:focus { border-bottom-color: var(--glance-accent); box-shadow: 0 1px 0 0 var(--glance-accent); }
+
+.glance-field {
+  background: var(--glance-surface);
+  border: 1px solid var(--glance-border);
+  border-radius: 0.5rem;
+  color: var(--glance-text);
+  font-family: var(--glance-font);
+  font-size: 0.8rem;
+  padding: 0.35rem 0.6rem;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.glance-field::placeholder { color: color-mix(in oklab, var(--glance-muted) 60%, transparent); }
+.glance-field:focus { border-color: var(--glance-accent); box-shadow: 0 0 0 1px color-mix(in oklab, var(--glance-accent) 30%, transparent); }
+
+/* ---------- Section labels ---------- */
+
+.glance-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--glance-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--glance-muted);
+}
+.glance-label svg { color: var(--glance-accent); filter: drop-shadow(0 0 6px var(--glance-accent-glow)); }
+
+/* ---------- Bento tiles ---------- */
+
+.glance-tile {
+  position: relative;
+  height: 100%;
+  border-radius: var(--glance-radius);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--glance-text) 5%, transparent) 0%, transparent 22%),
+    var(--glance-surface);
+  border: 1px solid var(--glance-border);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklab, var(--glance-text) 9%, transparent),
+    0 20px 45px -28px rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px) saturate(1.05);
+  overflow: hidden;
+  transition: transform .28s cubic-bezier(.2,.7,.2,1), box-shadow .28s, border-color .28s;
+}
+.glance-tile:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in oklab, var(--glance-accent) 45%, var(--glance-border));
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklab, var(--glance-text) 12%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--glance-accent) 22%, transparent),
+    0 28px 55px -26px var(--glance-accent-glow);
+}
+/* Corner bracket detail for the HUD feel. */
+.glance-tile::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 9px;
+  height: 9px;
+  border-top: 1.5px solid color-mix(in oklab, var(--glance-accent) 70%, transparent);
+  border-right: 1.5px solid color-mix(in oklab, var(--glance-accent) 70%, transparent);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Staggered entrance. Animated on the inner tile so react-grid-layout
+   keeps full control of the outer item's positioning transform. */
+@keyframes glance-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+.glance-tile { animation: glance-rise .55s cubic-bezier(.2,.7,.2,1) both; }
+.glance-tile:nth-child(1) { animation-delay: 0.04s; }
+.glance-tile:nth-child(2) { animation-delay: 0.12s; }
+.glance-tile:nth-child(3) { animation-delay: 0.20s; }
+.glance-tile:nth-child(4) { animation-delay: 0.28s; }
+
+/* Drag-to-rearrange feedback */
+.glance-tile[draggable="true"] { cursor: grab; }
+.glance-tile-dragging { opacity: 0.45; cursor: grabbing; }
+.glance-tile-over {
+  border-color: color-mix(in oklab, var(--glance-accent) 65%, var(--glance-border));
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--glance-accent) 40%, transparent),
+              0 28px 55px -26px var(--glance-accent-glow);
+}
+
+/* ---------- Clock ---------- */
+
+.glance-clock {
+  font-family: var(--glance-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-size: clamp(2.75rem, 6vw, 4.25rem);
+  color: var(--glance-accent);
+  text-shadow: 0 0 28px var(--glance-accent-glow), 0 0 3px var(--glance-accent-glow);
+}
+.glance-clock .sec { font-size: 0.42em; opacity: 0.5; margin-left: 0.15em; vertical-align: super; }
+.glance-colon { animation: glance-blink 2s steps(1, end) infinite; }
+@keyframes glance-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.glance-greet {
+  font-family: var(--glance-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: var(--glance-muted);
+}
+
+/* ---------- Todos ---------- */
+
+.glance-check { accent-color: var(--glance-accent); width: 0.95rem; height: 0.95rem; cursor: pointer; }
+.glance-todo-remove { color: color-mix(in oklab, var(--glance-muted) 70%, transparent); cursor: pointer; transition: color .2s; }
+.glance-todo-remove:hover { color: var(--glance-accent); }
+
+/* ---------- Bookmarks ---------- */
+
+.glance-bookmark { text-decoration: none; }
+.glance-mono-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 0.4rem;
+  font-family: var(--glance-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--glance-accent);
+  background: color-mix(in oklab, var(--glance-accent) 14%, transparent);
+  border: 1px solid color-mix(in oklab, var(--glance-accent) 30%, transparent);
+}
+
+/* ---------- Theme switcher / popovers ---------- */
+
+.glance-popover {
+  background: color-mix(in oklab, var(--glance-bg) 88%, transparent);
+  backdrop-filter: blur(16px) saturate(1.1);
+  border: 1px solid var(--glance-border);
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.9), inset 0 1px 0 0 color-mix(in oklab, var(--glance-text) 8%, transparent);
+}
+.glance-theme-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+  font-family: var(--glance-mono);
+  font-size: 0.82rem;
+  color: var(--glance-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.glance-theme-row:hover { background: var(--glance-surface); border-color: var(--glance-border); }
+.glance-swatch { width: 1rem; height: 1rem; border-radius: 0.3rem; border: 1px solid rgba(255,255,255,0.25); }
+
+/* ---------- Marketing display type ---------- */
+
+.glance-display {
+  font-family: 'Sora', var(--glance-font);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+.glance-aurora-text {
+  background: linear-gradient(180deg, var(--glance-text), color-mix(in oklab, var(--glance-accent) 70%, var(--glance-text)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes glance-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+.glance-reveal { animation: glance-fade-up .7s cubic-bezier(.2,.7,.2,1) both; }
+.glance-reveal-1 { animation-delay: 0.05s; }
+.glance-reveal-2 { animation-delay: 0.15s; }
+.glance-reveal-3 { animation-delay: 0.25s; }
+.glance-reveal-4 { animation-delay: 0.35s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .glance-tile, .glance-reveal { animation: none; }
+  .glance-colon { animation: none; }
 }

@@ -1,7 +1,7 @@
 import type { Theme } from './types';
 
-const SANS = "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif";
-const MONO = "ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace";
+const SANS = "'Sora', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif";
+const MONO = "'JetBrains Mono', ui-monospace, 'SF Mono', 'Fira Code', monospace";
 
 export const DEFAULT_THEME_ID = 'dark-neon-dev';
 
