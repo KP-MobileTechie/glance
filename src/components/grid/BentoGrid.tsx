@@ -32,7 +32,7 @@ export function BentoGrid({ state, onChange, onLayoutChange }: BentoGridProps) {
   }
 
   return (
-    <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(8, minmax(0, 1fr))', gridAutoRows: '76px' }}>
+    <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(8, minmax(0, 1fr))', gridAutoRows: '84px' }}>
       {state.widgets.map((w) => {
         const { Component, title } = WIDGET_REGISTRY[w.kind];
         const dragging = dragId === w.id;

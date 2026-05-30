@@ -60,24 +60,26 @@ export default function StartPage() {
 
   if (!state) {
     return (
-      <main className="mx-auto min-h-screen max-w-5xl px-5 py-10" aria-busy="true" aria-label="Loading Glance">
-        <div className="mb-9 flex items-center justify-between">
+      <main className="mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-8" aria-busy="true" aria-label="Loading Glance">
+        <div className="mb-8 flex items-center justify-between">
           <div className="glance-skeleton" style={{ width: '7rem', height: '1.6rem' }} />
           <div className="glance-skeleton" style={{ width: '6rem', height: '1.9rem' }} />
         </div>
-        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(8, minmax(0, 1fr))', gridAutoRows: '76px' }}>
-          <div className="glance-skeleton" style={{ gridColumn: '1 / span 4', gridRow: '1 / span 3' }} />
-          <div className="glance-skeleton" style={{ gridColumn: '5 / span 4', gridRow: '1 / span 3' }} />
-          <div className="glance-skeleton" style={{ gridColumn: '1 / span 4', gridRow: '4 / span 2' }} />
-          <div className="glance-skeleton" style={{ gridColumn: '5 / span 4', gridRow: '4 / span 2' }} />
+        <div className="flex flex-1 items-center">
+          <div className="grid w-full gap-4" style={{ gridTemplateColumns: 'repeat(8, minmax(0, 1fr))', gridAutoRows: '84px' }}>
+            <div className="glance-skeleton" style={{ gridColumn: '1 / span 4', gridRow: '1 / span 3' }} />
+            <div className="glance-skeleton" style={{ gridColumn: '5 / span 4', gridRow: '1 / span 3' }} />
+            <div className="glance-skeleton" style={{ gridColumn: '1 / span 4', gridRow: '4 / span 2' }} />
+            <div className="glance-skeleton" style={{ gridColumn: '5 / span 4', gridRow: '4 / span 2' }} />
+          </div>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-5xl px-5 py-10">
-      <header className="relative z-10 mb-9 flex items-center justify-between gap-3">
+    <main className="mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-8">
+      <header className="relative z-10 mb-8 flex items-center justify-between gap-3">
         <span className="glance-wordmark text-lg">
           <span className="glance-logo"><IconLogo /></span>
           glance
@@ -93,11 +95,15 @@ export default function StartPage() {
           />
         </div>
       </header>
-      <BentoGrid
-        state={state}
-        onChange={patch}
-        onLayoutChange={(widgets) => patch({ widgets })}
-      />
+      <div className="flex flex-1 items-center">
+        <div className="w-full">
+          <BentoGrid
+            state={state}
+            onChange={patch}
+            onLayoutChange={(widgets) => patch({ widgets })}
+          />
+        </div>
+      </div>
     </main>
   );
 }
