@@ -49,3 +49,35 @@ describe('BookmarksWidget', () => {
     );
   });
 });
+
+describe('FocusWidget todos', () => {
+  it('adds a todo when typing and pressing Enter', async () => {
+    const onChange = vi.fn();
+    render(<FocusWidget state={defaultState()} onChange={onChange} />);
+    const add = screen.getByPlaceholderText(/add a task/i);
+    await userEvent.type(add, 'write tests{Enter}');
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        todos: [expect.objectContaining({ text: 'write tests', done: false })],
+      }),
+    );
+  });
+
+  it('toggles a todo done state', async () => {
+    const onChange = vi.fn();
+    const state = { ...defaultState(), todos: [{ id: 't1', text: 'ship it', done: false }] };
+    render(<FocusWidget state={state} onChange={onChange} />);
+    await userEvent.click(screen.getByRole('checkbox', { name: /toggle ship it/i }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ todos: [expect.objectContaining({ id: 't1', done: true })] }),
+    );
+  });
+
+  it('removes a todo', async () => {
+    const onChange = vi.fn();
+    const state = { ...defaultState(), todos: [{ id: 't1', text: 'old task', done: false }] };
+    render(<FocusWidget state={state} onChange={onChange} />);
+    await userEvent.click(screen.getByRole('button', { name: /remove old task/i }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ todos: [] }));
+  });
+});
