@@ -37,10 +37,16 @@ export function BentoGrid({ state, onChange, onLayoutChange }: BentoGridProps) {
         const { Component, title } = WIDGET_REGISTRY[w.kind];
         const dragging = dragId === w.id;
         const isOver = overId === w.id && dragId !== null && dragId !== w.id;
+        // Build the class list from standalone tokens. Gluing a utility like
+        // `p-6` directly to a ${} expression hides it from Tailwind's scanner,
+        // so the padding rule never gets generated.
+        const tileClass = ['glance-tile', 'p-6', dragging && 'glance-tile-dragging', isOver && 'glance-tile-over']
+          .filter(Boolean)
+          .join(' ');
         return (
           <div
             key={w.id}
-            className={`glance-tile p-6${dragging ? ' glance-tile-dragging' : ''}${isOver ? ' glance-tile-over' : ''}`}
+            className={tileClass}
             style={{ gridColumn: `${w.pos.x + 1} / span ${w.pos.w}`, gridRow: `${w.pos.y + 1} / span ${w.pos.h}` }}
             draggable
             onDragStart={(e) => {
