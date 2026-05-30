@@ -8,9 +8,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'lat and lon are required' }, { status: 400 });
   }
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`;
-  const upstream = await fetch(url, { next: { revalidate: 600 } });
-  if (!upstream.ok) {
+  try {
+    const upstream = await fetch(url, { next: { revalidate: 600 } });
+    if (!upstream.ok) {
+      return NextResponse.json({ error: 'upstream failed' }, { status: 502 });
+    }
+    return NextResponse.json(await upstream.json());
+  } catch {
     return NextResponse.json({ error: 'upstream failed' }, { status: 502 });
   }
-  return NextResponse.json(await upstream.json());
 }
