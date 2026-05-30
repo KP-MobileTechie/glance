@@ -40,7 +40,7 @@ export function BentoGrid({ state, onChange, onLayoutChange }: BentoGridProps) {
         return (
           <div
             key={w.id}
-            className={`glance-tile p-5${dragging ? ' glance-tile-dragging' : ''}${isOver ? ' glance-tile-over' : ''}`}
+            className={`glance-tile p-6${dragging ? ' glance-tile-dragging' : ''}${isOver ? ' glance-tile-over' : ''}`}
             style={{ gridColumn: `${w.pos.x + 1} / span ${w.pos.w}`, gridRow: `${w.pos.y + 1} / span ${w.pos.h}` }}
             draggable
             onDragStart={(e) => {
