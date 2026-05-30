@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseWeather, weatherLabel } from './weather';
+import { parseWeather, weatherLabel, parseGeocode } from './weather';
 
 describe('parseWeather', () => {
   it('extracts rounded temperature and a label from Open-Meteo JSON', () => {
@@ -17,5 +17,16 @@ describe('weatherLabel', () => {
   it('maps known WMO codes and falls back for unknown', () => {
     expect(weatherLabel(0)).toMatch(/clear/i);
     expect(weatherLabel(999)).toBe('Unknown');
+  });
+});
+
+describe('parseGeocode', () => {
+  it('extracts lat/lon/name from the first geocoding result', () => {
+    const g = parseGeocode({ results: [{ latitude: 51.5, longitude: -0.12, name: 'London' }] });
+    expect(g).toEqual({ lat: 51.5, lon: -0.12, name: 'London' });
+  });
+  it('throws when there are no results', () => {
+    expect(() => parseGeocode({ results: [] })).toThrow();
+    expect(() => parseGeocode({})).toThrow();
   });
 });

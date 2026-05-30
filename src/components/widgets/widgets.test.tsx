@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { defaultState } from '@/lib/store/types';
 import { WIDGET_REGISTRY } from './registry';
 import { ClockWidget } from './ClockWidget';
 import { FocusWidget } from './FocusWidget';
 import { BookmarksWidget } from './BookmarksWidget';
+import { WeatherQuoteWidget } from './WeatherQuoteWidget';
 
 describe('widget registry', () => {
   it('has an entry for every widget kind', () => {
@@ -79,5 +80,32 @@ describe('FocusWidget todos', () => {
     render(<FocusWidget state={state} onChange={onChange} />);
     await userEvent.click(screen.getByRole('button', { name: /remove old task/i }));
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ todos: [] }));
+  });
+});
+
+describe('WeatherQuoteWidget city fallback', () => {
+  it('lets the user enter a city when geolocation is unavailable and persists it', async () => {
+    // jsdom has no navigator.geolocation, so we stub it to call the error callback
+    // to guarantee the denied path runs deterministically
+    vi.stubGlobal('navigator', {
+      ...navigator,
+      geolocation: {
+        getCurrentPosition: (_s: PositionCallback, e: PositionErrorCallback) =>
+          e({} as GeolocationPositionError),
+      },
+    });
+    const fetchMock = vi.fn((url: unknown) => {
+      if (String(url).includes('geocoding-api')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ results: [{ latitude: 51.5, longitude: -0.12, name: 'London' }] }) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ current: { temperature_2m: 12, weather_code: 3 } }) });
+    });
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    const onChange = vi.fn();
+    render(<WeatherQuoteWidget state={defaultState()} onChange={onChange} />);
+    const input = await screen.findByPlaceholderText(/enter your city/i);
+    await userEvent.type(input, 'London{Enter}');
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ weatherCity: 'London' })));
+    vi.unstubAllGlobals();
   });
 });
