@@ -201,6 +201,11 @@ main { position: relative; z-index: 1; }
 .glance-tile {
   position: relative;
   height: 100%;
+  /* Respect the grid track size: without these, a grid item's default
+     min-height:auto lets tall content (e.g. a long todo list) stretch the
+     row and unbalance the bento. Content scrolls/clips inside instead. */
+  min-height: 0;
+  min-width: 0;
   border-radius: var(--glance-radius);
   background:
     linear-gradient(180deg, color-mix(in oklab, var(--glance-text) 5%, transparent) 0%, transparent 22%),
