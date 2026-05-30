@@ -20,7 +20,7 @@ export default function Marketing() {
           style={{ background: 'var(--glance-accent)', color: 'var(--glance-bg)' }}>
           Open Glance
         </Link>
-        <a href="https://github.com" className="rounded-xl border px-6 py-3 text-base"
+        <a href="https://github.com/KP-MobileTechie/glance" target="_blank" rel="noopener noreferrer" className="rounded-xl border px-6 py-3 text-base"
           style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-text)' }}>
           Star on GitHub
         </a>
