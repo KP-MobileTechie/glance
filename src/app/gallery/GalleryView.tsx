@@ -14,7 +14,7 @@ export function GalleryView({ themes, onApply }: GalleryViewProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {themes.map((t) => (
-        <div key={t.id} className="glance-tile flex flex-col gap-3 p-4">
+        <div key={t.id} className="glance-tile flex flex-col gap-3 p-5">
           <div
             className="rounded-lg p-3"
             style={{ background: t.theme.colors.bg, border: `1px solid ${t.theme.colors.border}` }}
