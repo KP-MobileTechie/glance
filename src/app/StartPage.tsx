@@ -58,7 +58,22 @@ export default function StartPage() {
     publishTheme(client, auth.user.id, activeTheme).catch(() => {});
   }
 
-  if (!state) return <main className="min-h-screen" />;
+  if (!state) {
+    return (
+      <main className="mx-auto min-h-screen max-w-5xl px-5 py-10" aria-busy="true" aria-label="Loading Glance">
+        <div className="mb-9 flex items-center justify-between">
+          <div className="glance-skeleton" style={{ width: '7rem', height: '1.6rem' }} />
+          <div className="glance-skeleton" style={{ width: '6rem', height: '1.9rem' }} />
+        </div>
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(8, minmax(0, 1fr))', gridAutoRows: '76px' }}>
+          <div className="glance-skeleton" style={{ gridColumn: '1 / span 4', gridRow: '1 / span 3' }} />
+          <div className="glance-skeleton" style={{ gridColumn: '5 / span 4', gridRow: '1 / span 3' }} />
+          <div className="glance-skeleton" style={{ gridColumn: '1 / span 4', gridRow: '4 / span 2' }} />
+          <div className="glance-skeleton" style={{ gridColumn: '5 / span 4', gridRow: '4 / span 2' }} />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto min-h-screen max-w-5xl px-5 py-10">
