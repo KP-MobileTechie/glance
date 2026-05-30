@@ -12,6 +12,7 @@ import { getSupabase } from '@/lib/supabase/client';
 import { syncState } from '@/lib/sync/sync';
 import { AuthButton } from '@/components/AuthButton';
 import Link from 'next/link';
+import { publishTheme } from '@/lib/gallery/gallery';
 
 export default function StartPage() {
   const [state, setState] = useState<AppState | null>(null);
@@ -48,6 +49,14 @@ export default function StartPage() {
     patch({ themeId: theme.id });
   }
 
+  const activeTheme = customTheme && state && state.themeId === customTheme.id ? customTheme : (state ? getTheme(state.themeId) : null);
+
+  function handlePublish() {
+    const client = getSupabase();
+    if (!client || !auth.user || !activeTheme) return;
+    publishTheme(client, auth.user.id, activeTheme).catch(() => {});
+  }
+
   if (!state) return <main className="min-h-screen" />;
 
   return (
@@ -55,7 +64,12 @@ export default function StartPage() {
       <header className="relative z-10 mb-6 flex items-center justify-end gap-3">
         <Link href="/gallery" className="text-sm" style={{ color: 'var(--glance-muted)' }}>gallery</Link>
         <AuthButton enabled={auth.enabled} user={auth.user} onSignIn={auth.signIn} onSignOut={auth.signOut} />
-        <ThemeSwitcher activeId={state.themeId} onSelect={(id) => patch({ themeId: id })} onImport={importTheme} />
+        <ThemeSwitcher
+          activeId={state.themeId}
+          onSelect={(id) => patch({ themeId: id })}
+          onImport={importTheme}
+          onPublish={auth.user ? handlePublish : undefined}
+        />
       </header>
       <BentoGrid
         state={state}

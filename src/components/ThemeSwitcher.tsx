@@ -9,9 +9,10 @@ export interface ThemeSwitcherProps {
   activeId: string;
   onSelect: (id: string) => void;
   onImport: (theme: Theme) => void;
+  onPublish?: () => void;
 }
 
-export function ThemeSwitcher({ activeId, onSelect, onImport }: ThemeSwitcherProps) {
+export function ThemeSwitcher({ activeId, onSelect, onImport, onPublish }: ThemeSwitcherProps) {
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -48,6 +49,12 @@ export function ThemeSwitcher({ activeId, onSelect, onImport }: ThemeSwitcherPro
             <button onClick={importCode} className="mt-2 w-full rounded px-2 py-1 text-xs"
               style={{ background: 'var(--glance-accent)', color: 'var(--glance-bg)' }}>import theme</button>
             {error && <p className="mt-1 text-xs" style={{ color: '#f87171' }}>{error}</p>}
+            {onPublish && (
+              <button onClick={onPublish} className="mt-2 w-full rounded border px-2 py-1 text-xs"
+                style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-text)' }}>
+                publish current theme to gallery
+              </button>
+            )}
           </div>
         </div>
       )}
