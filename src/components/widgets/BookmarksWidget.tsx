@@ -8,6 +8,10 @@ export function BookmarksWidget({ state, onChange }: WidgetProps) {
   const [label, setLabel] = useState('');
   const [url, setUrl] = useState('');
 
+  function cancel() {
+    setLabel(''); setUrl(''); setAdding(false);
+  }
+
   function save() {
     if (!label || !url) return;
     const bookmark: Bookmark = { id: crypto.randomUUID(), label, url };
@@ -19,7 +23,7 @@ export function BookmarksWidget({ state, onChange }: WidgetProps) {
     <div className="flex h-full flex-col gap-3">
       <div className="flex flex-wrap gap-2">
         {state.bookmarks.map((b) => (
-          <a key={b.id} href={b.url} className="rounded-lg border px-3 py-1 text-sm"
+          <a key={b.id} href={b.url} target="_blank" rel="noopener noreferrer" className="rounded-lg border px-3 py-1 text-sm"
              style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-text)' }}>
             {b.label}
           </a>
@@ -36,6 +40,7 @@ export function BookmarksWidget({ state, onChange }: WidgetProps) {
           <input placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)}
             className="rounded border bg-transparent px-2 py-1 text-sm" style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-text)' }} />
           <button onClick={save} className="rounded px-3 py-1 text-sm" style={{ background: 'var(--glance-accent)', color: 'var(--glance-bg)' }}>save</button>
+          <button onClick={cancel} className="rounded border px-3 py-1 text-sm" style={{ borderColor: 'var(--glance-border)', color: 'var(--glance-muted)' }}>cancel</button>
         </div>
       )}
     </div>
