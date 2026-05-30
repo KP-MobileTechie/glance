@@ -1,0 +1,21 @@
+# Brainstorming companion artifacts
+.superpowers/
+
+# Dependencies
+node_modules/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Build output
+.next/
+out/
+dist/
+build/
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
