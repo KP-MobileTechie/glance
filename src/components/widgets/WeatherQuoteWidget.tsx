@@ -41,8 +41,10 @@ export function WeatherQuoteWidget({ state, onChange }: WidgetProps) {
               <span style={{ color: 'var(--glance-accent)', fontSize: '1.6rem', fontWeight: 300, textShadow: '0 0 18px var(--glance-accent-glow)' }}>{weather.tempC}&deg;</span>
               <span className="text-sm" style={{ color: 'var(--glance-muted)' }}>{weather.label}</span>
             </>
+          ) : denied ? (
+            <span className="text-sm" style={{ color: 'var(--glance-muted)' }}>weather unavailable</span>
           ) : (
-            <span className="text-sm" style={{ color: 'var(--glance-muted)' }}>{denied ? 'weather unavailable' : 'locating...'}</span>
+            <span className="glance-skeleton inline-block" style={{ width: '8rem', height: '1.6rem', borderRadius: '0.5rem' }} aria-label="loading weather" />
           )}
         </div>
       </div>
