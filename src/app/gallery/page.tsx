@@ -18,10 +18,10 @@ export default function GalleryPage() {
     listPublicThemes(client).then(setThemes).finally(() => setReady(true));
   }, [client]);
 
-  async function apply(theme: Theme, id: string) {
+  async function apply(theme: Theme, id: string | null) {
     applyTheme(theme);
     await updateState({ themeId: theme.id });
-    if (client) await incrementUseCount(client, id);
+    if (client && id) await incrementUseCount(client, id);
   }
 
   return (
@@ -37,7 +37,7 @@ export default function GalleryPage() {
       ) : !ready ? (
         <p className="text-sm" style={{ color: 'var(--glance-muted)' }}>Loading themes...</p>
       ) : (
-        <GalleryView themes={themes} onApply={(t) => { const g = themes.find((x) => x.theme.id === t.id); apply(t, g ? g.id : t.id); }} />
+        <GalleryView themes={themes} onApply={(t) => { const g = themes.find((x) => x.theme.id === t.id); apply(t, g ? g.id : null); }} />
       )}
     </main>
   );

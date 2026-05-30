@@ -41,6 +41,10 @@ create policy "authors manage their themes" on themes
   for all using (auth.uid() = author_id) with check (auth.uid() = author_id);
 
 create or replace function increment_theme_use(theme_id uuid)
-returns void language sql as $$
+returns void
+language sql
+security definer
+set search_path = public
+as $$
   update themes set use_count = use_count + 1 where id = theme_id;
 $$;
