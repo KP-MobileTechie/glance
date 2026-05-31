@@ -7,6 +7,9 @@ import { applyTheme } from '@/lib/theme/apply';
 import type { Theme } from '@/lib/theme/types';
 import { BentoGrid } from '@/components/grid/BentoGrid';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { SearchBar } from '@/components/SearchBar';
+import { SettingsPanel } from '@/components/SettingsPanel';
+import { ThemeCreator } from '@/components/ThemeCreator';
 import { useAuth } from '@/lib/auth/useAuth';
 import { getSupabase } from '@/lib/supabase/client';
 import { syncState } from '@/lib/sync/sync';
@@ -14,29 +17,28 @@ import { AuthButton } from '@/components/AuthButton';
 import Link from 'next/link';
 import { publishTheme } from '@/lib/gallery/gallery';
 import { IconLogo } from '@/components/icons/icons';
+import { useIsMobile } from '@/lib/useMediaQuery';
 
 export default function StartPage() {
   const [state, setState] = useState<AppState | null>(null);
-  const [customTheme, setCustomTheme] = useState<Theme | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [creatorOpen, setCreatorOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const auth = useAuth();
 
   useEffect(() => { loadState().then(setState); }, []);
 
   useEffect(() => {
     if (!state) return;
-    applyTheme(customTheme && state.themeId === customTheme.id ? customTheme : getTheme(state.themeId));
-  }, [state, customTheme]);
-
-  const auth = useAuth();
+    applyTheme(getTheme(state.themeId, state.customThemes));
+  }, [state]);
 
   useEffect(() => {
     const client = getSupabase();
     if (!client || !auth.user || !state) return;
     let cancelled = false;
-    syncState(client, auth.user.id, state).then((merged) => {
-      if (!cancelled) setState(merged);
-    }).catch(() => {});
+    syncState(client, auth.user.id, state).then((merged) => { if (!cancelled) setState(merged); }).catch(() => {});
     return () => { cancelled = true; };
-    // Sync when the user signs in. Intentionally not depending on `state` to avoid a push loop on every keystroke.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.user]);
 
@@ -45,17 +47,29 @@ export default function StartPage() {
     setState(next);
   }
 
+  function selectTheme(id: string) { patch({ themeId: id }); }
+
   function importTheme(theme: Theme) {
-    setCustomTheme(theme);
-    patch({ themeId: theme.id });
+    setState((s) => (s ? { ...s, customThemes: upsertTheme(s.customThemes, theme) } : s));
+    patch({ themeId: theme.id, customThemes: upsertTheme(state?.customThemes ?? [], theme) });
   }
 
-  const activeTheme = customTheme && state && state.themeId === customTheme.id ? customTheme : (state ? getTheme(state.themeId) : null);
-
+  function saveTheme(theme: Theme) {
+    patch({ customThemes: upsertTheme(state?.customThemes ?? [], theme) });
+  }
+  function applyCreated(theme: Theme) {
+    patch({ themeId: theme.id, customThemes: upsertTheme(state?.customThemes ?? [], theme) });
+    setCreatorOpen(false);
+  }
+  function deleteCustom(id: string) {
+    const next = (state?.customThemes ?? []).filter((t) => t.id !== id);
+    patch({ customThemes: next, themeId: state?.themeId === id ? 'dark-neon-dev' : state?.themeId ?? 'dark-neon-dev' });
+  }
   function handlePublish() {
     const client = getSupabase();
-    if (!client || !auth.user || !activeTheme) return;
-    publishTheme(client, auth.user.id, activeTheme).catch(() => {});
+    const active = getTheme(state!.themeId, state!.customThemes);
+    if (!client || !auth.user) return;
+    publishTheme(client, auth.user.id, active).catch(() => {});
   }
 
   if (!state) {
@@ -65,6 +79,7 @@ export default function StartPage() {
           <div className="glance-skeleton" style={{ width: '7rem', height: '1.6rem' }} />
           <div className="glance-skeleton" style={{ width: '6rem', height: '1.9rem' }} />
         </div>
+        <div className="glance-skeleton mx-auto mb-8 w-full max-w-2xl" style={{ height: '3rem' }} />
         <div className="flex flex-1 items-center">
           <div className="grid w-full gap-4" style={{ gridTemplateColumns: 'repeat(8, minmax(0, 1fr))', gridAutoRows: '84px' }}>
             <div className="glance-skeleton" style={{ gridColumn: '1 / span 4', gridRow: '1 / span 3' }} />
@@ -79,31 +94,62 @@ export default function StartPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-8">
-      <header className="relative z-10 mb-8 flex items-center justify-between gap-3">
+      <header className="relative z-10 mb-8 flex flex-wrap items-center justify-between gap-3">
         <span className="glance-wordmark text-lg">
           <span className="glance-logo"><IconLogo /></span>
           glance
         </span>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Link href="/gallery" className="glance-nav">gallery</Link>
           <AuthButton enabled={auth.enabled} user={auth.user} onSignIn={auth.signIn} onSignOut={auth.signOut} />
+          <button className="glance-chip" aria-label="settings" onClick={() => setSettingsOpen(true)}>settings</button>
           <ThemeSwitcher
             activeId={state.themeId}
-            onSelect={(id) => patch({ themeId: id })}
+            customThemes={state.customThemes}
+            onSelect={selectTheme}
             onImport={importTheme}
+            onCreate={() => setCreatorOpen(true)}
+            onDeleteCustom={deleteCustom}
             onPublish={auth.user ? handlePublish : undefined}
           />
         </div>
       </header>
-      <div className="flex flex-1 items-center">
+
+      <div className="mb-8">
+        <SearchBar engine={state.settings.searchEngine} />
+      </div>
+
+      <div className="flex flex-1 items-start">
         <div className="w-full">
           <BentoGrid
             state={state}
             onChange={patch}
             onLayoutChange={(widgets) => patch({ widgets })}
+            mobile={isMobile}
           />
         </div>
       </div>
+
+      <SettingsPanel
+        open={settingsOpen}
+        settings={state.settings}
+        userName={state.userName}
+        widgets={state.widgets}
+        onClose={() => setSettingsOpen(false)}
+        onChange={patch}
+      />
+      <ThemeCreator
+        open={creatorOpen}
+        onClose={() => setCreatorOpen(false)}
+        onSave={saveTheme}
+        onApply={applyCreated}
+        onPublish={auth.user ? (t) => { const client = getSupabase(); if (client && auth.user) publishTheme(client, auth.user.id, t).catch(() => {}); } : undefined}
+      />
     </main>
   );
+}
+
+function upsertTheme(list: Theme[], theme: Theme): Theme[] {
+  const without = list.filter((t) => t.id !== theme.id);
+  return [...without, theme];
 }

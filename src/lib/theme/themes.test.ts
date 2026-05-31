@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { BUILT_IN_THEMES, DEFAULT_THEME_ID, getTheme } from './themes';
+import { buildTheme } from './derive';
 
 describe('built-in themes', () => {
   it('includes the dark-neon-dev default', () => {
@@ -18,5 +19,15 @@ describe('built-in themes', () => {
 
   it('falls back to the default theme for an unknown id', () => {
     expect(getTheme('does-not-exist')?.id).toBe('dark-neon-dev');
+  });
+});
+
+describe('getTheme with custom themes', () => {
+  it('resolves a custom theme by id', () => {
+    const custom = buildTheme({ id: 'custom-mine', name: 'Mine', bg: '#101010', text: '#fff', muted: '#888', accent: '#0f0', font: 'm', mono: 'm', radius: '12px' });
+    expect(getTheme('custom-mine', [custom]).name).toBe('Mine');
+  });
+  it('still falls back to default for unknown id', () => {
+    expect(getTheme('nope', []).id).toBe('dark-neon-dev');
   });
 });

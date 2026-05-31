@@ -51,9 +51,10 @@ export const BUILT_IN_THEMES: Theme[] = [
   },
 ];
 
-export function getTheme(id: string): Theme {
+export function getTheme(id: string, custom: Theme[] = []): Theme {
   return (
     BUILT_IN_THEMES.find((t) => t.id === id) ??
+    custom.find((t) => t.id === id) ??
     BUILT_IN_THEMES.find((t) => t.id === DEFAULT_THEME_ID)!
   );
 }
