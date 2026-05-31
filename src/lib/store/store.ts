@@ -1,5 +1,5 @@
 import { getDB, STATE_KEY } from './db';
-import { defaultState, type AppState } from './types';
+import { defaultState, migrateState, type AppState } from './types';
 
 type Listener = (state: AppState) => void;
 const listeners = new Set<Listener>();
@@ -7,7 +7,7 @@ const listeners = new Set<Listener>();
 export async function loadState(): Promise<AppState> {
   const db = await getDB();
   const stored = await db.get('app', STATE_KEY);
-  return stored ?? defaultState();
+  return stored ? migrateState(stored) : defaultState();
 }
 
 export async function saveState(state: AppState): Promise<void> {
