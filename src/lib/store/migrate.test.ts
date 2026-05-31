@@ -39,4 +39,22 @@ describe('migrateState', () => {
     expect(s.widgets).toHaveLength(4);
     expect(s.settings).toEqual(d.settings);
   });
+
+  it('rejects corrupted setting field types and falls back to defaults', () => {
+    const s = migrateState({ settings: { clock24h: 'yes', tempUnit: 42, searchEngine: 'altavista' } });
+    expect(s.settings.clock24h).toBe(true);
+    expect(s.settings.tempUnit).toBe('C');
+    expect(s.settings.searchEngine).toBe('google');
+  });
+
+  it('deduplicates repeated widget kinds', () => {
+    const s = migrateState({
+      widgets: [
+        { id: 'a', kind: 'clock', pos: { x: 0, y: 0, w: 4, h: 3 } },
+        { id: 'b', kind: 'clock', pos: { x: 4, y: 0, w: 4, h: 3 } },
+      ],
+    });
+    expect(s.widgets.filter((w) => w.kind === 'clock')).toHaveLength(1);
+    expect(s.widgets).toHaveLength(4);
+  });
 });

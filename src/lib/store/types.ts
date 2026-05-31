@@ -64,6 +64,19 @@ export function defaultState(): AppState {
   };
 }
 
+function asSettings(raw: unknown): Settings {
+  if (typeof raw !== 'object' || raw === null) return { ...DEFAULT_SETTINGS };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const r = raw as Record<string, any>;
+  const engines: SearchEngine[] = ['google', 'duckduckgo', 'bing', 'brave'];
+  return {
+    clock24h: typeof r.clock24h === 'boolean' ? r.clock24h : DEFAULT_SETTINGS.clock24h,
+    showSeconds: typeof r.showSeconds === 'boolean' ? r.showSeconds : DEFAULT_SETTINGS.showSeconds,
+    tempUnit: r.tempUnit === 'C' || r.tempUnit === 'F' ? r.tempUnit : DEFAULT_SETTINGS.tempUnit,
+    searchEngine: engines.includes(r.searchEngine) ? r.searchEngine : DEFAULT_SETTINGS.searchEngine,
+  };
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function asWidget(w: any): WidgetInstance | null {
   if (!w || !WIDGET_KINDS.includes(w.kind)) return null;
@@ -96,6 +109,12 @@ export function migrateState(raw: unknown): AppState {
       return (a?.pos?.x ?? 0) - (b?.pos?.x ?? 0);
     });
     widgets = ordered.map(asWidget).filter((w): w is WidgetInstance => w !== null);
+    const seenKinds = new Set<string>();
+    widgets = widgets.filter((w) => {
+      if (seenKinds.has(w.kind)) return false;
+      seenKinds.add(w.kind);
+      return true;
+    });
     for (const kind of WIDGET_KINDS) {
       if (!widgets.some((w) => w.kind === kind)) {
         widgets.push({ id: crypto.randomUUID(), kind, span: { ...DEFAULT_SPAN[kind] }, hidden: false });
@@ -112,7 +131,7 @@ export function migrateState(raw: unknown): AppState {
     todos: Array.isArray(r.todos) ? r.todos : [],
     bookmarks: Array.isArray(r.bookmarks) ? r.bookmarks : [],
     weatherCity: typeof r.weatherCity === 'string' ? r.weatherCity : null,
-    settings: { ...base.settings, ...(typeof r.settings === 'object' && r.settings ? r.settings : {}) },
+    settings: asSettings(r.settings),
     updatedAt: typeof r.updatedAt === 'number' ? r.updatedAt : 0,
   };
 }
