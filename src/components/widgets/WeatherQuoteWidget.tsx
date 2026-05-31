@@ -38,7 +38,9 @@ export function WeatherQuoteWidget({ state, onChange }: WidgetProps) {
         <div className="mt-2 flex items-baseline gap-2">
           {weather ? (
             <>
-              <span style={{ color: 'var(--glance-accent)', fontSize: '1.6rem', fontWeight: 300, textShadow: '0 0 18px var(--glance-accent-glow)' }}>{weather.tempC}&deg;</span>
+              <span style={{ color: 'var(--glance-accent)', fontSize: '1.6rem', fontWeight: 300, textShadow: '0 0 18px var(--glance-accent-glow)' }}>
+                {state.settings.tempUnit === 'F' ? Math.round(weather.tempC * 9 / 5 + 32) : weather.tempC}&deg;{state.settings.tempUnit}
+              </span>
               <span className="text-sm" style={{ color: 'var(--glance-muted)' }}>{weather.label}</span>
             </>
           ) : denied ? (
