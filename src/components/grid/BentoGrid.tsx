@@ -17,23 +17,21 @@ export function BentoGrid({ state, onChange, onLayoutChange }: BentoGridProps) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
-  // Drag-to-rearrange swaps the grid positions of two widgets.
-  function swap(aId: string, bId: string) {
-    if (aId === bId) return;
-    const a = state.widgets.find((w) => w.id === aId);
-    const b = state.widgets.find((w) => w.id === bId);
-    if (!a || !b) return;
-    const widgets = state.widgets.map((w) => {
-      if (w.id === aId) return { ...w, pos: b.pos };
-      if (w.id === bId) return { ...w, pos: a.pos };
-      return w;
-    });
-    onLayoutChange(widgets);
+  // Drag-to-rearrange reorders the widgets array.
+  function reorder(fromId: string, toId: string) {
+    if (fromId === toId) return;
+    const arr = [...state.widgets];
+    const from = arr.findIndex((w) => w.id === fromId);
+    const to = arr.findIndex((w) => w.id === toId);
+    if (from < 0 || to < 0) return;
+    const [moved] = arr.splice(from, 1);
+    arr.splice(to, 0, moved);
+    onLayoutChange(arr);
   }
 
   return (
-    <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(8, minmax(0, 1fr))', gridAutoRows: '84px' }}>
-      {state.widgets.map((w) => {
+    <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(8, minmax(0, 1fr))', gridAutoRows: '84px', gridAutoFlow: 'dense' }}>
+      {state.widgets.filter((w) => !w.hidden).map((w) => {
         const { Component, title } = WIDGET_REGISTRY[w.kind];
         const dragging = dragId === w.id;
         const isOver = overId === w.id && dragId !== null && dragId !== w.id;
@@ -47,7 +45,7 @@ export function BentoGrid({ state, onChange, onLayoutChange }: BentoGridProps) {
           <div
             key={w.id}
             className={tileClass}
-            style={{ gridColumn: `${w.pos.x + 1} / span ${w.pos.w}`, gridRow: `${w.pos.y + 1} / span ${w.pos.h}` }}
+            style={{ gridColumn: `span ${w.span.w}`, gridRow: `span ${w.span.h}` }}
             draggable
             onDragStart={(e) => {
               if ((e.target as HTMLElement).closest(INTERACTIVE)) { e.preventDefault(); return; }
@@ -56,7 +54,7 @@ export function BentoGrid({ state, onChange, onLayoutChange }: BentoGridProps) {
             }}
             onDragOver={(e) => { if (dragId && dragId !== w.id) { e.preventDefault(); setOverId(w.id); } }}
             onDragLeave={() => setOverId((id) => (id === w.id ? null : id))}
-            onDrop={(e) => { e.preventDefault(); if (dragId) swap(dragId, w.id); setDragId(null); setOverId(null); }}
+            onDrop={(e) => { e.preventDefault(); if (dragId) reorder(dragId, w.id); setDragId(null); setOverId(null); }}
             onDragEnd={() => { setDragId(null); setOverId(null); }}
           >
             <span className="sr-only">{title}</span>
