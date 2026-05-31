@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { buildTheme } from '@/lib/theme/derive';
 import { themeToVars } from '@/lib/theme/apply';
 import { encodeTheme } from '@/lib/theme/share';
@@ -28,6 +28,9 @@ export function ThemeCreator({ open, onClose, onSave, onApply, onPublish }: Them
   const accentRef = useRef<HTMLInputElement>(null);
   // preview counter to trigger re-render when color changes
   const [, setTick] = useState(0);
+  // stable-but-unique id: reset once each time the creator opens
+  const idRef = useRef('');
+  useEffect(() => { if (open) idRef.current = 'custom-' + crypto.randomUUID().slice(0, 8); }, [open]);
   if (!open) return null;
 
   function readColors() {
@@ -42,7 +45,7 @@ export function ThemeCreator({ open, onClose, onSave, onApply, onPublish }: Them
   function compose(): Theme {
     const colors = readColors();
     return buildTheme({
-      id: 'custom-' + (name.trim().toLowerCase().replace(/\s+/g, '-') || 'theme') + '-' + radius,
+      id: idRef.current || ('custom-' + name.trim().toLowerCase().replace(/\s+/g, '-') || 'custom'),
       name: name.trim() || 'My theme',
       ...colors,
       font: isMono ? MONO : SANS, mono: MONO, radius: `${radius}px`,

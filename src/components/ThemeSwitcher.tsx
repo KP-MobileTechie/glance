@@ -50,6 +50,7 @@ export function ThemeSwitcher({ activeId, onSelect, onImport, onPublish, customT
                   <button onClick={() => onSelect(t.id)} className="glance-theme-row" style={{ fontWeight: t.id === activeId ? 700 : 400 }}>
                     <span className="glance-swatch" style={{ background: t.colors.bg, boxShadow: `inset 0 0 0 3px ${t.colors.accent}` }} />
                     {t.name}
+                    {t.id === activeId && <span className="ml-auto text-xs" style={{ color: 'var(--glance-accent)' }}>active</span>}
                   </button>
                   {onDeleteCustom && (
                     <button onClick={() => onDeleteCustom(t.id)} aria-label={`delete ${t.name}`} className="glance-todo-remove px-2 text-base leading-none">&times;</button>
