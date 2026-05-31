@@ -114,12 +114,12 @@ describe('ClockWidget formats', () => {
   it('shows 12-hour time with a meridiem when clock24h is false', () => {
     const state = { ...defaultState(), settings: { ...defaultState().settings, clock24h: false, showSeconds: false } };
     render(<ClockWidget state={state} onChange={() => {}} now={new Date('2026-05-30T13:05:00')} />);
-    expect(screen.getByText(/1:05/)).toBeInTheDocument();
+    expect(screen.getByText((_, el) => el?.classList.contains('glance-hhmm') === true && el?.textContent === '1:05')).toBeInTheDocument();
     expect(screen.getByText(/pm/i)).toBeInTheDocument();
   });
   it('shows 24-hour time by default', () => {
     render(<ClockWidget state={defaultState()} onChange={() => {}} now={new Date('2026-05-30T13:05:00')} />);
-    expect(screen.getByText(/13/)).toBeInTheDocument();
+    expect(screen.getByText((_, el) => el?.classList.contains('glance-hhmm') === true && el?.textContent === '13:05')).toBeInTheDocument();
   });
 });
 
