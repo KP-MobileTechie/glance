@@ -25,7 +25,8 @@ export function BentoGrid({ state, onChange, onLayoutChange, mobile = false }: B
     const to = arr.findIndex((w) => w.id === toId);
     if (from < 0 || to < 0) return;
     const [moved] = arr.splice(from, 1);
-    arr.splice(to, 0, moved);
+    const insertAt = from < to ? to - 1 : to;
+    arr.splice(insertAt, 0, moved);
     onLayoutChange(arr);
   }
 
