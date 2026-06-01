@@ -9,18 +9,23 @@ describe('ThemeCreator', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('saves a theme built from the chosen accent colour', async () => {
+  it('saves a theme built from the typed accent hex code', async () => {
     const onSave = vi.fn();
     render(<ThemeCreator open onClose={() => {}} onSave={onSave} onApply={() => {}} />);
-    const accent = screen.getByLabelText(/accent colour/i) as HTMLInputElement;
-    // color inputs: set value property directly + fire native input event
-    Object.defineProperty(accent, 'value', { writable: true, configurable: true, value: '#ff0000' });
-    accent.dispatchEvent(new Event('input', { bubbles: true }));
+    const accentHex = screen.getByLabelText(/accent hex/i);
+    await userEvent.clear(accentHex);
+    await userEvent.type(accentHex, '#ff0000');
     await userEvent.click(screen.getByRole('button', { name: /save to my themes/i }));
     expect(onSave).toHaveBeenCalled();
     const theme = onSave.mock.calls.at(-1)[0];
     expect(theme.colors.accent).toBe('#ff0000');
     expect(theme.colors.accentGlow).toContain('rgba(255, 0, 0');
+  });
+
+  it('shows the current hex code for each colour', () => {
+    render(<ThemeCreator open onClose={() => {}} onSave={() => {}} onApply={() => {}} />);
+    expect((screen.getByLabelText(/accent hex/i) as HTMLInputElement).value).toBe('#5eead4');
+    expect((screen.getByLabelText(/background hex/i) as HTMLInputElement).value).toBe('#07080d');
   });
 
   it('applies a theme when apply is clicked', async () => {

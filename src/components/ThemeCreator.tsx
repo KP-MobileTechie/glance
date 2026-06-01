@@ -1,10 +1,10 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { buildTheme } from '@/lib/theme/derive';
 import { themeToVars } from '@/lib/theme/apply';
 import { encodeTheme } from '@/lib/theme/share';
 import type { Theme } from '@/lib/theme/types';
-import type { CSSProperties } from 'react';
 
 const SANS = "'Sora', ui-sans-serif, system-ui, sans-serif";
 const MONO = "'JetBrains Mono', ui-monospace, monospace";
@@ -17,45 +17,65 @@ export interface ThemeCreatorProps {
   onPublish?: (theme: Theme) => void;
 }
 
+interface ColorRowProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+// One row: a visible, editable hex code plus a colour picker, both bound to
+// the same value so you always see exactly which colour code is in use.
+function ColorRow({ label, value, onChange }: ColorRowProps) {
+  const validHex = /^#[0-9a-fA-F]{6}$/.test(value);
+  return (
+    <div className="glance-field-row">
+      <span>{label}</span>
+      <span className="flex items-center gap-2">
+        <input
+          type="text"
+          aria-label={`${label} hex`}
+          className="glance-field"
+          style={{ width: '6.5rem', fontFamily: 'var(--glance-mono)', textTransform: 'lowercase' }}
+          value={value}
+          spellCheck={false}
+          maxLength={7}
+          placeholder="#rrggbb"
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <input
+          type="color"
+          aria-label={`${label} colour`}
+          value={validHex ? value : '#000000'}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </span>
+    </div>
+  );
+}
+
 export function ThemeCreator({ open, onClose, onSave, onApply, onPublish }: ThemeCreatorProps) {
   const [name, setName] = useState('My theme');
+  const [bg, setBg] = useState('#07080d');
+  const [text, setText] = useState('#e8f7ff');
+  const [muted, setMuted] = useState('#7dd3fc');
+  const [accent, setAccent] = useState('#5eead4');
   const [isMono, setIsMono] = useState(true);
   const [radius, setRadius] = useState(14);
-  // Use refs for color values so uncontrolled inputs + native events work in tests
-  const bgRef = useRef<HTMLInputElement>(null);
-  const textRef = useRef<HTMLInputElement>(null);
-  const mutedRef = useRef<HTMLInputElement>(null);
-  const accentRef = useRef<HTMLInputElement>(null);
-  // preview counter to trigger re-render when color changes
-  const [, setTick] = useState(0);
-  // stable-but-unique id: reset once each time the creator opens
-  const idRef = useRef('');
-  useEffect(() => { if (open) idRef.current = 'custom-' + crypto.randomUUID().slice(0, 8); }, [open]);
+  const [id, setId] = useState('');
+  // stable-but-unique id: a fresh one each time the creator opens
+  useEffect(() => { if (open) setId('custom-' + crypto.randomUUID().slice(0, 8)); }, [open]);
   if (!open) return null;
 
-  function readColors() {
-    return {
-      bg: bgRef.current?.value ?? '#07080d',
-      text: textRef.current?.value ?? '#e8f7ff',
-      muted: mutedRef.current?.value ?? '#7dd3fc',
-      accent: accentRef.current?.value ?? '#5eead4',
-    };
-  }
-
   function compose(): Theme {
-    const colors = readColors();
     return buildTheme({
-      id: idRef.current || ('custom-' + name.trim().toLowerCase().replace(/\s+/g, '-') || 'custom'),
+      id: id || 'custom-' + (name.trim().toLowerCase().replace(/\s+/g, '-') || 'theme'),
       name: name.trim() || 'My theme',
-      ...colors,
-      font: isMono ? MONO : SANS, mono: MONO, radius: `${radius}px`,
+      bg, text, muted, accent,
+      font: isMono ? MONO : SANS,
+      mono: MONO,
+      radius: `${radius}px`,
     });
   }
-
-  function handleColorChange() {
-    setTick((t) => t + 1);
-  }
-
   const vars = themeToVars(compose()) as CSSProperties;
 
   return (
@@ -78,22 +98,10 @@ export function ThemeCreator({ open, onClose, onSave, onApply, onPublish }: Them
             <label className="glance-field-row">name
               <input className="glance-field" aria-label="theme name" value={name} onChange={(e) => setName(e.target.value)} />
             </label>
-            <label className="glance-field-row">background
-              <input type="color" aria-label="background colour" ref={bgRef} defaultValue="#07080d"
-                onChange={handleColorChange} onInput={handleColorChange} />
-            </label>
-            <label className="glance-field-row">text
-              <input type="color" aria-label="text colour" ref={textRef} defaultValue="#e8f7ff"
-                onChange={handleColorChange} onInput={handleColorChange} />
-            </label>
-            <label className="glance-field-row">muted
-              <input type="color" aria-label="muted colour" ref={mutedRef} defaultValue="#7dd3fc"
-                onChange={handleColorChange} onInput={handleColorChange} />
-            </label>
-            <label className="glance-field-row">accent
-              <input type="color" aria-label="accent colour" ref={accentRef} defaultValue="#5eead4"
-                onChange={handleColorChange} onInput={handleColorChange} />
-            </label>
+            <ColorRow label="background" value={bg} onChange={setBg} />
+            <ColorRow label="text" value={text} onChange={setText} />
+            <ColorRow label="muted" value={muted} onChange={setMuted} />
+            <ColorRow label="accent" value={accent} onChange={setAccent} />
             <label className="glance-field-row">font
               <select className="glance-field" aria-label="font" value={isMono ? 'mono' : 'sans'} onChange={(e) => setIsMono(e.target.value === 'mono')}>
                 <option value="mono">Mono</option>
@@ -101,7 +109,7 @@ export function ThemeCreator({ open, onClose, onSave, onApply, onPublish }: Them
               </select>
             </label>
             <label className="glance-field-row">corner radius
-              <input type="range" min={8} max={22} aria-label="corner radius" value={radius} onChange={(e) => { setRadius(Number(e.target.value)); }} />
+              <input type="range" min={8} max={22} aria-label="corner radius" value={radius} onChange={(e) => setRadius(Number(e.target.value))} />
             </label>
             <div className="mt-2 flex flex-wrap gap-2">
               <button className="glance-btn-primary text-sm" onClick={() => onApply(compose())}>apply</button>

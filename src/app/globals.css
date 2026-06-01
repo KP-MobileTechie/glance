@@ -385,6 +385,23 @@ main { position: relative; z-index: 1; }
 }
 .glance-search svg, .glance-search span { color: var(--glance-accent); }
 .glance-search input::placeholder { color: color-mix(in oklab, var(--glance-muted) 60%, transparent); }
+.glance-search-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--glance-accent);
+  font-size: 1.05rem;
+  line-height: 1;
+  transition: filter .2s;
+}
+.glance-search-btn:hover { filter: drop-shadow(0 0 8px var(--glance-accent-glow)); }
+.glance-search-engine {
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: color-mix(in oklab, var(--glance-muted) 70%, transparent);
+}
 
 /* ---------- Overlay sheets (settings, theme creator) ---------- */
 .glance-overlay {

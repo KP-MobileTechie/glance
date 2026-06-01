@@ -23,4 +23,12 @@ describe('SearchBar', () => {
     await userEvent.keyboard('/');
     expect(screen.getByRole('searchbox')).toHaveFocus();
   });
+
+  it('navigates when the search button is clicked', async () => {
+    const onNavigate = vi.fn();
+    render(<SearchBar engine="duckduckgo" onNavigate={onNavigate} />);
+    await userEvent.type(screen.getByRole('searchbox'), 'cats');
+    await userEvent.click(screen.getByRole('button', { name: /submit search/i }));
+    expect(onNavigate).toHaveBeenCalledWith('https://duckduckgo.com/?q=cats');
+  });
 });
