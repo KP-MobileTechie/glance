@@ -23,7 +23,13 @@ export default function StartPage() {
   const [state, setState] = useState<AppState | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [creatorOpen, setCreatorOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const isMobile = useIsMobile();
+
+  function showToast(message: string) {
+    setToast(message);
+    window.setTimeout(() => setToast(null), 2800);
+  }
   const auth = useAuth();
 
   useEffect(() => { loadState().then(setState); }, []);
@@ -65,11 +71,19 @@ export default function StartPage() {
     const next = (state?.customThemes ?? []).filter((t) => t.id !== id);
     patch({ customThemes: next, themeId: state?.themeId === id ? 'dark-neon-dev' : state?.themeId ?? 'dark-neon-dev' });
   }
-  function handlePublish() {
+  async function publishWithFeedback(theme: Theme) {
     const client = getSupabase();
-    const active = getTheme(state!.themeId, state!.customThemes);
-    if (!client || !auth.user) return;
-    publishTheme(client, auth.user.id, active).catch(() => {});
+    if (!client || !auth.user) { showToast('Sign in with GitHub to publish'); return; }
+    try {
+      await publishTheme(client, auth.user.id, theme);
+      showToast('Published to the gallery');
+    } catch {
+      showToast('Could not publish theme');
+    }
+  }
+  function handlePublish() {
+    if (!state) return;
+    publishWithFeedback(getTheme(state.themeId, state.customThemes));
   }
 
   if (!state) {
@@ -143,8 +157,9 @@ export default function StartPage() {
         onClose={() => setCreatorOpen(false)}
         onSave={saveTheme}
         onApply={applyCreated}
-        onPublish={auth.user ? (t) => { const client = getSupabase(); if (client && auth.user) publishTheme(client, auth.user.id, t).catch(() => {}); } : undefined}
+        onPublish={auth.user ? (t) => publishWithFeedback(t) : undefined}
       />
+      {toast && <div className="glance-toast" role="status">{toast}</div>}
     </main>
   );
 }

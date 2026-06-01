@@ -457,3 +457,26 @@ main { position: relative; z-index: 1; }
 }
 .glance-creator input[type="color"] { width: 2.4rem; height: 1.6rem; border: none; background: none; cursor: pointer; }
 @media (max-width: 640px) { .glance-creator { grid-template-columns: 1fr; } }
+
+/* ---------- Select dropdown visibility (options popup uses theme colours) ---------- */
+select.glance-field { background-color: var(--glance-bg); color: var(--glance-text); appearance: none; -webkit-appearance: none; padding-right: 1.4rem; }
+.glance-field option { background-color: var(--glance-bg); color: var(--glance-text); }
+
+/* ---------- Toast feedback ---------- */
+.glance-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 80;
+  background: color-mix(in oklab, var(--glance-bg) 85%, transparent);
+  backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in oklab, var(--glance-accent) 40%, var(--glance-border));
+  color: var(--glance-text);
+  font-family: var(--glance-mono);
+  font-size: 0.82rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0.7rem;
+  box-shadow: 0 10px 30px -12px var(--glance-accent-glow);
+  animation: glance-fade-up .25s ease both;
+}
