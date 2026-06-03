@@ -6,12 +6,13 @@ export interface SettingsPanelProps {
   open: boolean;
   settings: Settings;
   userName: string;
+  weatherCity: string | null;
   widgets: WidgetInstance[];
   onClose: () => void;
   onChange: (patch: Partial<AppState>) => void;
 }
 
-export function SettingsPanel({ open, settings, userName, widgets, onClose, onChange }: SettingsPanelProps) {
+export function SettingsPanel({ open, settings, userName, weatherCity, widgets, onClose, onChange }: SettingsPanelProps) {
   if (!open) return null;
   function setSetting<K extends keyof Settings>(key: K, value: Settings[K]) {
     onChange({ settings: { ...settings, [key]: value } });
@@ -48,6 +49,16 @@ export function SettingsPanel({ open, settings, userName, widgets, onClose, onCh
             <option value="C">Celsius</option>
             <option value="F">Fahrenheit</option>
           </select>
+        </label>
+
+        <label className="glance-field-row">weather city
+          <input
+            className="glance-field"
+            style={{ width: '10rem' }}
+            placeholder="auto (geolocation)"
+            value={weatherCity ?? ''}
+            onChange={(e) => onChange({ weatherCity: e.target.value || null })}
+          />
         </label>
 
         <label className="glance-field-row">search engine

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { defaultState } from '@/lib/store/types';
 import { SettingsPanel } from './SettingsPanel';
@@ -40,9 +40,10 @@ describe('SettingsPanel', () => {
     expect(screen.getByPlaceholderText(/auto.*geolocation/i)).toBeInTheDocument();
   });
 
-  it('calls onChange with weatherCity when city input changes', async () => {
+  it('calls onChange with weatherCity when city input changes', () => {
     const { onChange } = setup({ weatherCity: null });
-    await userEvent.type(screen.getByPlaceholderText(/auto.*geolocation/i), 'Tokyo');
+    const input = screen.getByPlaceholderText(/auto.*geolocation/i);
+    fireEvent.change(input, { target: { value: 'Tokyo' } });
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ weatherCity: 'Tokyo' }));
   });
 });
