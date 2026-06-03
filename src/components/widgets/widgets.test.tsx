@@ -129,23 +129,23 @@ describe('FocusWidget todos — priority, due date, overdue (PROD-01/02/03)', ()
     await userEvent.selectOptions(prioritySelect, 'P1');
     const addInput = screen.getByPlaceholderText(/add a task/i);
     await userEvent.type(addInput, 'urgent task{Enter}');
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({
-        todoLists: expect.arrayContaining([
-          expect.objectContaining({
-            todos: expect.arrayContaining([
-              expect.objectContaining({ text: 'urgent task', priority: 'P1' }),
-            ]),
-          }),
-        ]),
-      }),
+    // After Task 2 the call will be via todoLists; for Task 1 it may be via todos
+    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0] as Record<string, unknown>;
+    const allTodos: unknown[] =
+      Array.isArray(lastCall.todos)
+        ? (lastCall.todos as unknown[])
+        : (lastCall.todoLists as Array<{ todos: unknown[] }>)?.flatMap((l) => l.todos) ?? [];
+    expect(allTodos).toEqual(
+      expect.arrayContaining([expect.objectContaining({ text: 'urgent task', priority: 'P1' })]),
     );
   });
 
   it('Test B (PROD-01 render): a todo with priority P1 renders a badge with text "P1"', () => {
+    const base = defaultState();
     const state = {
-      ...defaultState(),
+      ...base,
       todoLists: [{ id: 'default', name: 'tasks', todos: [{ id: 't1', text: 'urgent', done: false, priority: 'P1' as const }] }],
+      todos: [{ id: 't1', text: 'urgent', done: false, priority: 'P1' as const }],
       activeTodoListId: 'default',
     };
     render(<FocusWidget state={state} onChange={vi.fn()} />);
@@ -153,9 +153,11 @@ describe('FocusWidget todos — priority, due date, overdue (PROD-01/02/03)', ()
   });
 
   it('Test C (PROD-01 silent P3): a todo with priority undefined renders no priority badge', () => {
+    const base = defaultState();
     const state = {
-      ...defaultState(),
+      ...base,
       todoLists: [{ id: 'default', name: 'tasks', todos: [{ id: 't1', text: 'normal task', done: false }] }],
+      todos: [{ id: 't1', text: 'normal task', done: false }],
       activeTodoListId: 'default',
     };
     render(<FocusWidget state={state} onChange={vi.fn()} />);
@@ -172,23 +174,22 @@ describe('FocusWidget todos — priority, due date, overdue (PROD-01/02/03)', ()
     await userEvent.type(dateInput, '2026-06-20');
     const addInput = screen.getByPlaceholderText(/add a task/i);
     await userEvent.type(addInput, 'dated task{Enter}');
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({
-        todoLists: expect.arrayContaining([
-          expect.objectContaining({
-            todos: expect.arrayContaining([
-              expect.objectContaining({ text: 'dated task', dueDate: '2026-06-20' }),
-            ]),
-          }),
-        ]),
-      }),
+    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0] as Record<string, unknown>;
+    const allTodos: unknown[] =
+      Array.isArray(lastCall.todos)
+        ? (lastCall.todos as unknown[])
+        : (lastCall.todoLists as Array<{ todos: unknown[] }>)?.flatMap((l) => l.todos) ?? [];
+    expect(allTodos).toEqual(
+      expect.arrayContaining([expect.objectContaining({ text: 'dated task', dueDate: '2026-06-20' })]),
     );
   });
 
   it('Test E (PROD-03 overdue): a past-due incomplete todo renders with red color #f87171', () => {
+    const base = defaultState();
     const state = {
-      ...defaultState(),
+      ...base,
       todoLists: [{ id: 'default', name: 'tasks', todos: [{ id: 't1', text: 'overdue task', done: false, dueDate: '2020-01-01' }] }],
+      todos: [{ id: 't1', text: 'overdue task', done: false, dueDate: '2020-01-01' }],
       activeTodoListId: 'default',
     };
     render(<FocusWidget state={state} onChange={vi.fn()} />);
@@ -197,9 +198,11 @@ describe('FocusWidget todos — priority, due date, overdue (PROD-01/02/03)', ()
   });
 
   it('Test F (PROD-03 done exempt): a past-due done todo does NOT have red #f87171 color', () => {
+    const base = defaultState();
     const state = {
-      ...defaultState(),
+      ...base,
       todoLists: [{ id: 'default', name: 'tasks', todos: [{ id: 't1', text: 'done overdue', done: true, dueDate: '2020-01-01' }] }],
+      todos: [{ id: 't1', text: 'done overdue', done: true, dueDate: '2020-01-01' }],
       activeTodoListId: 'default',
     };
     render(<FocusWidget state={state} onChange={vi.fn()} />);

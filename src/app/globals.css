@@ -290,6 +290,15 @@ main { position: relative; z-index: 1; }
 .glance-todo-remove { color: color-mix(in oklab, var(--glance-muted) 70%, transparent); cursor: pointer; transition: color .2s; }
 .glance-todo-remove:hover { color: var(--glance-accent); }
 
+.glance-priority-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.25rem;
+  background: color-mix(in oklab, currentColor 12%, transparent);
+  border: 1px solid color-mix(in oklab, currentColor 30%, transparent);
+}
+
 /* ---------- Bookmarks ---------- */
 
 .glance-bookmark { text-decoration: none; }
