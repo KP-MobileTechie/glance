@@ -1,14 +1,41 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import type { WidgetProps } from './ClockWidget';
-import type { Todo, TodoPriority } from '@/lib/store/types';
+import type { AppState, Todo, TodoList, TodoPriority } from '@/lib/store/types';
 import { IconFocus } from '@/components/icons/icons';
 
 function priorityColor(p: TodoPriority): string {
-  if (p === 'P1') return '#f87171'; // red — urgent
-  if (p === 'P2') return '#fb923c'; // orange — high
-  if (p === 'P4') return '#94a3b8'; // slate — low
+  if (p === 'P1') return '#f87171';
+  if (p === 'P2') return '#fb923c';
+  if (p === 'P4') return '#94a3b8';
   return 'var(--glance-muted)';
+}
+
+const PRIORITY_RANK: Record<string, number> = { P1: 1, P2: 2, P3: 3, P4: 4 };
+
+function getActiveList(state: AppState): { todos: Todo[]; isDefault: boolean; listId: string | null } {
+  if (!state.activeTodoListId) return { todos: state.todos, isDefault: true, listId: null };
+  const found = state.todoLists.find((l) => l.id === state.activeTodoListId);
+  return found
+    ? { todos: found.todos, isDefault: false, listId: found.id }
+    : { todos: state.todos, isDefault: true, listId: null };
+}
+
+function updateActiveTodos(
+  state: AppState,
+  onChange: (p: Partial<AppState>) => void,
+  todos: Todo[],
+) {
+  const active = getActiveList(state);
+  if (active.isDefault) {
+    onChange({ todos });
+  } else {
+    onChange({
+      todoLists: state.todoLists.map((l) =>
+        l.id === active.listId ? { ...l, todos } : l,
+      ),
+    });
+  }
 }
 
 export function FocusWidget({ state, onChange }: WidgetProps) {
@@ -16,19 +43,24 @@ export function FocusWidget({ state, onChange }: WidgetProps) {
   const [draft, setDraft] = useState('');
   const [priority, setPriority] = useState<TodoPriority | undefined>(undefined);
   const [dueDate, setDueDate] = useState('');
+  const [addingList, setAddingList] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [renamingListId, setRenamingListId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
   const listRef = useRef<HTMLUListElement>(null);
-  const prevLen = useRef(state.todos.length);
+
+  const { todos: activeTodos } = getActiveList(state);
+  const prevLen = useRef(activeTodos.length);
+
   useEffect(() => { setValue(state.focus); }, [state.focus]);
 
-  // When a task is added, scroll the list to reveal the new item at the bottom.
   useEffect(() => {
-    if (state.todos.length > prevLen.current && listRef.current) {
+    if (activeTodos.length > prevLen.current && listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
-    prevLen.current = state.todos.length;
-  }, [state.todos.length]);
+    prevLen.current = activeTodos.length;
+  }, [activeTodos.length]);
 
-  // Compute today's date using local time (not UTC) to avoid timezone off-by-one
   const now = new Date();
   const todayStr =
     now.getFullYear() +
@@ -41,6 +73,10 @@ export function FocusWidget({ state, onChange }: WidgetProps) {
     return !t.done && !!t.dueDate && t.dueDate < todayStr;
   }
 
+  const sortedTodos = [...activeTodos].sort(
+    (a, b) => (PRIORITY_RANK[a.priority ?? 'P3'] ?? 3) - (PRIORITY_RANK[b.priority ?? 'P3'] ?? 3),
+  );
+
   function addTodo() {
     const text = draft.trim();
     if (!text) return;
@@ -51,16 +87,43 @@ export function FocusWidget({ state, onChange }: WidgetProps) {
       ...(priority !== undefined ? { priority } : {}),
       ...(dueDate ? { dueDate } : {}),
     };
-    onChange({ todos: [...state.todos, todo] });
+    updateActiveTodos(state, onChange, [...activeTodos, todo]);
     setDraft('');
     setPriority(undefined);
     setDueDate('');
   }
+
   function toggle(id: string) {
-    onChange({ todos: state.todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) });
+    updateActiveTodos(state, onChange, activeTodos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
   }
+
   function remove(id: string) {
-    onChange({ todos: state.todos.filter((t) => t.id !== id) });
+    updateActiveTodos(state, onChange, activeTodos.filter((t) => t.id !== id));
+  }
+
+  function createList() {
+    const name = newListName.trim();
+    if (!name) return;
+    const newList: TodoList = { id: crypto.randomUUID(), name, todos: [] };
+    onChange({ todoLists: [...state.todoLists, newList] });
+    setAddingList(false);
+    setNewListName('');
+  }
+
+  function deleteList(listId: string) {
+    onChange({
+      todoLists: state.todoLists.filter((l) => l.id !== listId),
+      activeTodoListId: state.activeTodoListId === listId ? null : state.activeTodoListId,
+    });
+  }
+
+  function commitRename(listId: string) {
+    const name = renameValue.trim();
+    if (name) {
+      onChange({ todoLists: state.todoLists.map((l) => l.id === listId ? { ...l, name } : l) });
+    }
+    setRenamingListId(null);
+    setRenameValue('');
   }
 
   return (
@@ -73,20 +136,79 @@ export function FocusWidget({ state, onChange }: WidgetProps) {
         onChange={(e) => setValue(e.target.value)}
         onBlur={() => { if (value !== state.focus) onChange({ focus: value }); }}
       />
+
+      {/* List tab strip */}
+      <div className="flex flex-wrap gap-1.5">
+        {state.todoLists.map((list) => (
+          <div key={list.id} className="flex items-center gap-0.5">
+            {renamingListId === list.id ? (
+              <input
+                autoFocus
+                className="glance-field text-xs w-20"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onBlur={() => commitRename(list.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitRename(list.id);
+                  if (e.key === 'Escape') { setRenamingListId(null); setRenameValue(''); }
+                }}
+              />
+            ) : (
+              <button
+                className="glance-chip text-xs"
+                style={{
+                  color: list.id === state.activeTodoListId ? 'var(--glance-accent)' : 'var(--glance-muted)',
+                  borderColor:
+                    list.id === state.activeTodoListId
+                      ? 'color-mix(in oklab, var(--glance-accent) 55%, var(--glance-border))'
+                      : 'var(--glance-border)',
+                }}
+                onClick={() => onChange({ activeTodoListId: list.id })}
+                onDoubleClick={() => { setRenamingListId(list.id); setRenameValue(list.name); }}
+              >
+                {list.name}
+              </button>
+            )}
+            {state.todoLists.length > 1 && list.id !== 'default' && (
+              <button
+                aria-label={`delete ${list.name}`}
+                className="glance-todo-remove text-xs leading-none"
+                onClick={() => deleteList(list.id)}
+              >
+                &times;
+              </button>
+            )}
+          </div>
+        ))}
+        {addingList ? (
+          <input
+            autoFocus
+            className="glance-field text-xs w-24"
+            placeholder="list name"
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            onBlur={createList}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') createList();
+              if (e.key === 'Escape') { setAddingList(false); setNewListName(''); }
+            }}
+          />
+        ) : (
+          <button className="glance-chip text-xs" onClick={() => setAddingList(true)}>+ list</button>
+        )}
+      </div>
+
       <ul ref={listRef} className="glance-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1.5">
-        {state.todos.length === 0 && (
+        {sortedTodos.length === 0 && (
           <li className="text-xs italic" style={{ color: 'color-mix(in oklab, var(--glance-muted) 60%, transparent)' }}>
             no tasks yet
           </li>
         )}
-        {state.todos.map((t) => (
+        {sortedTodos.map((t) => (
           <li key={t.id} className="flex items-center gap-2.5 overflow-hidden text-sm">
             <input type="checkbox" className="glance-check shrink-0" checked={t.done} onChange={() => toggle(t.id)} aria-label={`toggle ${t.text}`} />
             {t.priority && t.priority !== 'P3' && (
-              <span
-                className="glance-priority-badge text-xs shrink-0"
-                style={{ color: priorityColor(t.priority) }}
-              >
+              <span className="glance-priority-badge text-xs shrink-0" style={{ color: priorityColor(t.priority) }}>
                 {t.priority}
               </span>
             )}
@@ -104,6 +226,7 @@ export function FocusWidget({ state, onChange }: WidgetProps) {
           </li>
         ))}
       </ul>
+
       <div className="flex shrink-0 flex-col gap-1.5">
         <div className="flex gap-1.5">
           <label htmlFor="focus-priority" className="sr-only">Priority</label>

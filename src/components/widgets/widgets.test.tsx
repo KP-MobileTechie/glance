@@ -95,29 +95,56 @@ describe('FocusWidget todos', () => {
     render(<FocusWidget state={defaultState()} onChange={onChange} />);
     const add = screen.getByPlaceholderText(/add a task/i);
     await userEvent.type(add, 'write tests{Enter}');
+    // After Task 2, addTodo routes through updateActiveTodos -> todoLists
     expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({
-        todos: [expect.objectContaining({ text: 'write tests', done: false })],
+        todoLists: expect.arrayContaining([
+          expect.objectContaining({
+            todos: expect.arrayContaining([expect.objectContaining({ text: 'write tests', done: false })]),
+          }),
+        ]),
       }),
     );
   });
 
   it('toggles a todo done state', async () => {
     const onChange = vi.fn();
-    const state = { ...defaultState(), todos: [{ id: 't1', text: 'ship it', done: false }] };
+    const base = defaultState();
+    const state = {
+      ...base,
+      todoLists: [{ id: 'default', name: 'tasks', todos: [{ id: 't1', text: 'ship it', done: false }] }],
+      activeTodoListId: 'default',
+    };
     render(<FocusWidget state={state} onChange={onChange} />);
     await userEvent.click(screen.getByRole('checkbox', { name: /toggle ship it/i }));
     expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ todos: [expect.objectContaining({ id: 't1', done: true })] }),
+      expect.objectContaining({
+        todoLists: expect.arrayContaining([
+          expect.objectContaining({
+            todos: expect.arrayContaining([expect.objectContaining({ id: 't1', done: true })]),
+          }),
+        ]),
+      }),
     );
   });
 
   it('removes a todo', async () => {
     const onChange = vi.fn();
-    const state = { ...defaultState(), todos: [{ id: 't1', text: 'old task', done: false }] };
+    const base = defaultState();
+    const state = {
+      ...base,
+      todoLists: [{ id: 'default', name: 'tasks', todos: [{ id: 't1', text: 'old task', done: false }] }],
+      activeTodoListId: 'default',
+    };
     render(<FocusWidget state={state} onChange={onChange} />);
     await userEvent.click(screen.getByRole('button', { name: /remove old task/i }));
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ todos: [] }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        todoLists: expect.arrayContaining([
+          expect.objectContaining({ todos: [] }),
+        ]),
+      }),
+    );
   });
 });
 
