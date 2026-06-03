@@ -24,6 +24,7 @@ export default function StartPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [creatorOpen, setCreatorOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [authPending, setAuthPending] = useState(false);
   const isMobile = useIsMobile();
 
   function showToast(message: string) {
@@ -47,6 +48,21 @@ export default function StartPage() {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.user]);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Escape') return;
+      if (settingsOpen) setSettingsOpen(false);
+      if (creatorOpen) setCreatorOpen(false);
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [settingsOpen, creatorOpen]);
+
+  function handleSignIn() {
+    setAuthPending(true);
+    auth.signIn();
+  }
 
   async function patch(p: Partial<AppState>) {
     const next = await updateState(p);
@@ -115,7 +131,7 @@ export default function StartPage() {
         </span>
         <div className="flex flex-wrap items-center gap-3">
           <Link href="/gallery" className="glance-nav">gallery</Link>
-          <AuthButton enabled={auth.enabled} user={auth.user} onSignIn={auth.signIn} onSignOut={auth.signOut} />
+          <AuthButton enabled={auth.enabled} user={auth.user} isPending={authPending} onSignIn={handleSignIn} onSignOut={auth.signOut} />
           <button className="glance-chip" aria-label="settings" onClick={() => setSettingsOpen(true)}>settings</button>
           <ThemeSwitcher
             activeId={state.themeId}
