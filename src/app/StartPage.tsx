@@ -1,8 +1,8 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { loadState, updateState } from '@/lib/store/store';
-import type { AppState } from '@/lib/store/types';
-import { getTheme } from '@/lib/theme/themes';
+import type { AppState, SearchEngine, Todo } from '@/lib/store/types';
+import { getTheme, BUILT_IN_THEMES } from '@/lib/theme/themes';
 import { applyTheme } from '@/lib/theme/apply';
 import type { Theme } from '@/lib/theme/types';
 import { BentoGrid } from '@/components/grid/BentoGrid';
@@ -18,6 +18,10 @@ import Link from 'next/link';
 import { publishTheme } from '@/lib/gallery/gallery';
 import { IconLogo } from '@/components/icons/icons';
 import { useIsMobile } from '@/lib/useMediaQuery';
+import { CommandPalette } from '@/components/CommandPalette';
+import type { PaletteCommand } from '@/components/CommandPalette';
+
+const SEARCH_ENGINES: SearchEngine[] = ['google', 'duckduckgo', 'bing', 'brave'];
 
 export default function StartPage() {
   const [state, setState] = useState<AppState | null>(null);
@@ -25,6 +29,8 @@ export default function StartPage() {
   const [creatorOpen, setCreatorOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [authPending, setAuthPending] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteQuery, setPaletteQuery] = useState('');
   const isMobile = useIsMobile();
 
   function showToast(message: string) {
@@ -51,13 +57,20 @@ export default function StartPage() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Escape') return;
-      if (settingsOpen) setSettingsOpen(false);
-      if (creatorOpen) setCreatorOpen(false);
+      if (e.key === 'Escape') {
+        if (paletteOpen) { setPaletteOpen(false); return; }  // palette takes priority
+        if (settingsOpen) setSettingsOpen(false);
+        if (creatorOpen) setCreatorOpen(false);
+        return;
+      }
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [settingsOpen, creatorOpen]);
+  }, [settingsOpen, creatorOpen, paletteOpen]);
 
   function handleSignIn() {
     setAuthPending(true);
@@ -70,6 +83,61 @@ export default function StartPage() {
   }
 
   function selectTheme(id: string) { patch({ themeId: id }); }
+
+  function handlePaletteAddTask(text: string) {
+    if (!state || !text.trim()) return;
+    const newTodo: Todo = { id: crypto.randomUUID(), text: text.trim(), done: false };
+    const activeListId = state.activeTodoListId;
+    const foundInLists = activeListId
+      ? state.todoLists.find((l) => l.id === activeListId)
+      : null;
+    if (foundInLists) {
+      // Route to the active named list (including the 'default' list in todoLists)
+      patch({
+        todoLists: state.todoLists.map((l) =>
+          l.id === activeListId ? { ...l, todos: [...l.todos, newTodo] } : l
+        ),
+      });
+    } else {
+      // Fallback to legacy todos array
+      patch({ todos: [...state.todos, newTodo] });
+    }
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const paletteCommands: PaletteCommand[] = useMemo(() => {
+    if (!state) return [];
+    return [
+      // Open settings
+      { id: 'open-settings', label: 'open settings', group: 'settings',
+        action: () => setSettingsOpen(true) },
+      // Switch theme — one command per installed theme (built-in + custom)
+      ...[...BUILT_IN_THEMES, ...(state.customThemes ?? [])].map((t) => ({
+        id: `theme-${t.id}`,
+        label: `switch theme: ${t.name}`,
+        keywords: [t.name, 'theme'],
+        group: 'themes' as const,
+        action: () => selectTheme(t.id),
+      })),
+      // Toggle widget visibility — one per widget
+      ...(state.widgets ?? []).map((w) => ({
+        id: `widget-${w.id}`,
+        label: `${w.hidden ? 'show' : 'hide'} widget: ${w.kind}`,
+        keywords: [w.kind, 'widget', 'toggle'],
+        group: 'widgets' as const,
+        action: () => patch({ widgets: state.widgets.map((ww) => ww.id === w.id ? { ...ww, hidden: !ww.hidden } : ww) }),
+      })),
+      // Change search engine — one per engine
+      ...SEARCH_ENGINES.map((eng) => ({
+        id: `search-${eng}`,
+        label: `change search engine: ${eng}`,
+        keywords: [eng, 'search'],
+        group: 'settings' as const,
+        action: () => patch({ settings: { ...state.settings, searchEngine: eng } }),
+      })),
+    ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, settingsOpen]);
 
   function importTheme(theme: Theme) {
     setState((s) => (s ? { ...s, customThemes: upsertTheme(s.customThemes, theme) } : s));
@@ -177,6 +245,14 @@ export default function StartPage() {
         onPublish={auth.user ? (t) => publishWithFeedback(t) : undefined}
       />
       {toast && <div className="glance-toast" role="status">{toast}</div>}
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        commands={paletteCommands}
+        query={paletteQuery}
+        onQueryChange={setPaletteQuery}
+        onAddTask={handlePaletteAddTask}
+      />
     </main>
   );
 }
