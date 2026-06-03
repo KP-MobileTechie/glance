@@ -51,6 +51,44 @@ describe('BookmarksWidget', () => {
   });
 });
 
+describe('BookmarksWidget URL validation', () => {
+  it('rejects a javascript: URL with an error message and does not call onChange', async () => {
+    const onChange = vi.fn();
+    render(<BookmarksWidget state={defaultState()} onChange={onChange} />);
+    await userEvent.click(screen.getByRole('button', { name: /add/i }));
+    await userEvent.type(screen.getByPlaceholderText(/label/i), 'bad');
+    await userEvent.type(screen.getByPlaceholderText(/https/i), 'javascript:alert(1)');
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+    expect(screen.getByText(/must start with https/i)).toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('rejects a data: URL with an error message and does not call onChange', async () => {
+    const onChange = vi.fn();
+    render(<BookmarksWidget state={defaultState()} onChange={onChange} />);
+    await userEvent.click(screen.getByRole('button', { name: /add/i }));
+    await userEvent.type(screen.getByPlaceholderText(/label/i), 'bad');
+    await userEvent.type(screen.getByPlaceholderText(/https/i), 'data:text/html,<h1>xss</h1>');
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+    expect(screen.getByText(/must start with https/i)).toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('accepts an https:// URL and calls onChange', async () => {
+    const onChange = vi.fn();
+    render(<BookmarksWidget state={defaultState()} onChange={onChange} />);
+    await userEvent.click(screen.getByRole('button', { name: /add/i }));
+    await userEvent.type(screen.getByPlaceholderText(/label/i), 'Good');
+    await userEvent.type(screen.getByPlaceholderText(/https/i), 'https://example.com');
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bookmarks: [expect.objectContaining({ label: 'Good', url: 'https://example.com' })],
+      }),
+    );
+  });
+});
+
 describe('FocusWidget todos', () => {
   it('adds a todo when typing and pressing Enter', async () => {
     const onChange = vi.fn();
