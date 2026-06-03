@@ -1,6 +1,6 @@
 import { getDB } from './db';
 
-export type SecretKey = 'openai_api_key' | 'anthropic_api_key';
+export type SecretKey = 'openai_api_key' | 'anthropic_api_key' | 'github_token';
 
 export async function getSecret(key: SecretKey): Promise<string | undefined> {
   const db = await getDB();

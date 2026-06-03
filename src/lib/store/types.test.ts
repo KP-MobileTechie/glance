@@ -34,6 +34,83 @@ describe('defaultState', () => {
   });
 });
 
+describe('Phase 3 widget defaults and migration', () => {
+  // T-WDGT-11b: defaultState new widgets hidden, existing visible
+  it('T-WDGT-11b: defaultState new widgets have hidden:true, existing have hidden:false', () => {
+    const s = defaultState();
+    const newKinds = ['pomodoro', 'news', 'github', 'devTools'];
+    const existingKinds = ['clock', 'focus', 'bookmarks', 'weatherQuote'];
+    for (const kind of newKinds) {
+      const w = s.widgets.find((x) => x.kind === kind);
+      expect(w, `widget ${kind} should exist`).toBeDefined();
+      expect(w!.hidden, `${kind} should be hidden`).toBe(true);
+    }
+    for (const kind of existingKinds) {
+      const w = s.widgets.find((x) => x.kind === kind);
+      expect(w, `widget ${kind} should exist`).toBeDefined();
+      expect(w!.hidden, `${kind} should be visible`).toBe(false);
+    }
+  });
+
+  // T-WDGT-11a: migrateState adds new widgets hidden:true to pre-Phase-3 state
+  it('T-WDGT-11a: migrateState on pre-Phase-3 state adds new widgets with hidden:true', () => {
+    const prePhase3 = {
+      widgets: [
+        { id: 'a', kind: 'clock', span: { w: 4, h: 3 }, hidden: false },
+        { id: 'b', kind: 'focus', span: { w: 4, h: 3 }, hidden: false },
+        { id: 'c', kind: 'bookmarks', span: { w: 4, h: 2 }, hidden: false },
+        { id: 'd', kind: 'weatherQuote', span: { w: 4, h: 2 }, hidden: false },
+      ],
+      themeId: 'dark-neon-dev',
+      todos: [],
+    };
+    const result = migrateState(prePhase3);
+    const newKinds = ['pomodoro', 'news', 'github', 'devTools'];
+    for (const kind of newKinds) {
+      const w = result.widgets.find((x) => x.kind === kind);
+      expect(w, `widget ${kind} should be backfilled`).toBeDefined();
+      expect(w!.hidden, `${kind} should be hidden after migration`).toBe(true);
+    }
+  });
+
+  // migrateState on state missing pomodoroSessions returns []
+  it('migrateState missing pomodoroSessions returns empty array', () => {
+    const result = migrateState({});
+    expect(result.pomodoroSessions).toEqual([]);
+  });
+
+  // migrateState on state missing pomodoroConfig returns defaults
+  it('migrateState missing pomodoroConfig returns {workMin:25, breakMin:5}', () => {
+    const result = migrateState({});
+    expect(result.pomodoroConfig).toEqual({ workMin: 25, breakMin: 5 });
+  });
+
+  // migrateState on state missing hnConfig returns defaults
+  it('migrateState missing hnConfig returns {count:10, rssUrl:null}', () => {
+    const result = migrateState({});
+    expect(result.hnConfig).toEqual({ count: 10, rssUrl: null });
+  });
+
+  // migrateState on state missing githubUsername returns ''
+  it('migrateState missing githubUsername returns empty string', () => {
+    const result = migrateState({});
+    expect(result.githubUsername).toBe('');
+  });
+
+  // migrateState preserves valid pomodoroConfig values
+  it('migrateState preserves valid pomodoroConfig.workMin', () => {
+    const result = migrateState({ pomodoroConfig: { workMin: 30, breakMin: 10 } });
+    expect(result.pomodoroConfig.workMin).toBe(30);
+    expect(result.pomodoroConfig.breakMin).toBe(10);
+  });
+
+  // migrateState preserves valid hnConfig.count
+  it('migrateState preserves valid hnConfig.count', () => {
+    const result = migrateState({ hnConfig: { count: 20, rssUrl: null } });
+    expect(result.hnConfig.count).toBe(20);
+  });
+});
+
 describe('migrateState — todoLists and activeTodoListId', () => {
   // Test C: migration from legacy state seeds the default list
   it('seeds default todoList from legacy todos array when no todoLists exist', () => {

@@ -72,7 +72,7 @@ export function SettingsPanel({ open, settings, userName, weatherCity, widgets, 
         </label>
 
         <div className="glance-label" style={{ marginTop: '0.5rem' }}>widgets</div>
-        {widgets.map((w) => (
+        {widgets.filter((w) => w.kind in WIDGET_REGISTRY).map((w) => (
           <label key={w.id} className="glance-field-row">{WIDGET_REGISTRY[w.kind].title}
             <input type="checkbox" className="glance-check" aria-label={`show ${WIDGET_REGISTRY[w.kind].title}`}
               checked={!w.hidden} onChange={() => toggleWidget(w.id)} />

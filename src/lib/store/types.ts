@@ -1,6 +1,6 @@
 import type { Theme } from '@/lib/theme/types';
 
-export const WIDGET_KINDS = ['clock', 'focus', 'bookmarks', 'weatherQuote'] as const;
+export const WIDGET_KINDS = ['clock', 'focus', 'bookmarks', 'weatherQuote', 'pomodoro', 'news', 'github', 'devTools'] as const;
 export type WidgetKind = (typeof WIDGET_KINDS)[number];
 
 export interface WidgetSpan { w: number; h: number; }
@@ -39,6 +39,23 @@ export const DEFAULT_SETTINGS: Settings = {
   searchEngine: 'google',
 };
 
+export interface PomodoroSession {
+  id: string;
+  completedAt: number;   // epoch ms
+  type: 'work' | 'break';
+  durationMin: number;
+}
+
+export interface PomodoroConfig {
+  workMin: number;   // default 25
+  breakMin: number;  // default 5
+}
+
+export interface HNConfig {
+  count: number;         // default 10; valid range 5-30
+  rssUrl: string | null; // null = use Algolia HN API
+}
+
 export interface AppState {
   widgets: WidgetInstance[];
   themeId: string;
@@ -50,6 +67,10 @@ export interface AppState {
   activeTodoListId: string | null;
   bookmarks: Bookmark[];
   weatherCity: string | null;
+  pomodoroSessions: PomodoroSession[];
+  pomodoroConfig: PomodoroConfig;
+  hnConfig: HNConfig;
+  githubUsername: string;
   settings: Settings;
   updatedAt: number;
 }
@@ -59,7 +80,13 @@ const DEFAULT_SPAN: Record<WidgetKind, WidgetSpan> = {
   focus: { w: 4, h: 3 },
   bookmarks: { w: 4, h: 2 },
   weatherQuote: { w: 4, h: 2 },
+  pomodoro: { w: 4, h: 2 },
+  news: { w: 4, h: 3 },
+  github: { w: 8, h: 3 },
+  devTools: { w: 4, h: 3 },
 };
+
+const HIDDEN_BY_DEFAULT = new Set<WidgetKind>(['pomodoro', 'news', 'github', 'devTools']);
 
 export function defaultState(): AppState {
   return {
@@ -67,7 +94,7 @@ export function defaultState(): AppState {
       id: crypto.randomUUID(),
       kind,
       span: { ...DEFAULT_SPAN[kind] },
-      hidden: false,
+      hidden: HIDDEN_BY_DEFAULT.has(kind),
     })),
     themeId: 'dark-neon-dev',
     customThemes: [],
@@ -78,6 +105,10 @@ export function defaultState(): AppState {
     activeTodoListId: 'default',
     bookmarks: [],
     weatherCity: null,
+    pomodoroSessions: [],
+    pomodoroConfig: { workMin: 25, breakMin: 5 },
+    hnConfig: { count: 10, rssUrl: null },
+    githubUsername: '',
     settings: { ...DEFAULT_SETTINGS },
     updatedAt: 0,
   };
@@ -93,6 +124,24 @@ function asSettings(raw: unknown): Settings {
     showSeconds: typeof r.showSeconds === 'boolean' ? r.showSeconds : DEFAULT_SETTINGS.showSeconds,
     tempUnit: r.tempUnit === 'C' || r.tempUnit === 'F' ? r.tempUnit : DEFAULT_SETTINGS.tempUnit,
     searchEngine: engines.includes(r.searchEngine) ? r.searchEngine : DEFAULT_SETTINGS.searchEngine,
+  };
+}
+
+function asPomodoroConfig(raw: unknown): PomodoroConfig {
+  if (typeof raw !== 'object' || raw === null) return { workMin: 25, breakMin: 5 };
+  const r = raw as Record<string, unknown>;
+  return {
+    workMin: typeof r.workMin === 'number' && r.workMin > 0 ? r.workMin : 25,
+    breakMin: typeof r.breakMin === 'number' && r.breakMin > 0 ? r.breakMin : 5,
+  };
+}
+
+function asHNConfig(raw: unknown): HNConfig {
+  if (typeof raw !== 'object' || raw === null) return { count: 10, rssUrl: null };
+  const r = raw as Record<string, unknown>;
+  return {
+    count: typeof r.count === 'number' && r.count >= 5 && r.count <= 30 ? r.count : 10,
+    rssUrl: typeof r.rssUrl === 'string' ? r.rssUrl : null,
   };
 }
 
@@ -136,7 +185,7 @@ export function migrateState(raw: unknown): AppState {
     });
     for (const kind of WIDGET_KINDS) {
       if (!widgets.some((w) => w.kind === kind)) {
-        widgets.push({ id: crypto.randomUUID(), kind, span: { ...DEFAULT_SPAN[kind] }, hidden: false });
+        widgets.push({ id: crypto.randomUUID(), kind, span: { ...DEFAULT_SPAN[kind] }, hidden: HIDDEN_BY_DEFAULT.has(kind) });
       }
     }
   }
@@ -158,6 +207,10 @@ export function migrateState(raw: unknown): AppState {
     activeTodoListId: typeof r.activeTodoListId === 'string' ? r.activeTodoListId : todoLists[0]?.id ?? null,
     bookmarks: Array.isArray(r.bookmarks) ? r.bookmarks : [],
     weatherCity: typeof r.weatherCity === 'string' ? r.weatherCity : null,
+    pomodoroSessions: Array.isArray(r.pomodoroSessions) ? r.pomodoroSessions : [],
+    pomodoroConfig: asPomodoroConfig(r.pomodoroConfig),
+    hnConfig: asHNConfig(r.hnConfig),
+    githubUsername: typeof r.githubUsername === 'string' ? r.githubUsername : '',
     settings: asSettings(r.settings),
     updatedAt: typeof r.updatedAt === 'number' ? r.updatedAt : 0,
   };

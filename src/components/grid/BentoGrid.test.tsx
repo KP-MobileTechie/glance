@@ -49,10 +49,15 @@ describe('BentoGrid', () => {
     fireEvent.drop(tiles[2]);
     expect(onLayoutChange).toHaveBeenCalled();
     const next = onLayoutChange.mock.calls.at(-1)[0];
-    // original order: [clock, focus, bookmarks, weatherQuote]
-    // clock (index 0) dropped onto bookmarks (index 2): after splice removes clock,
-    // array is [focus, bookmarks, weatherQuote]; insertAt = 2 => [focus, bookmarks, clock, weatherQuote]
-    expect(next.map((w: { kind: string }) => w.kind)).toEqual(['focus', 'bookmarks', 'clock', 'weatherQuote']);
+    // Visible tiles are [clock, focus, bookmarks, weatherQuote] (new widgets are hidden).
+    // clock (index 0) dropped onto bookmarks (index 2) in visible order:
+    // After splice on full widget list the reordering result contains all 8 kinds
+    // with new hidden kinds preserved at the end.
+    const kinds = next.map((w: { kind: string }) => w.kind);
+    expect(kinds[0]).toBe('focus');
+    expect(kinds[1]).toBe('bookmarks');
+    expect(kinds[2]).toBe('clock');
+    expect(kinds[3]).toBe('weatherQuote');
   });
 
   it('reorders widgets correctly when dragging from index 0 to index 3', () => {
@@ -67,8 +72,12 @@ describe('BentoGrid', () => {
     fireEvent.drop(tiles[3]);
     expect(onLayoutChange).toHaveBeenCalled();
     const next = onLayoutChange.mock.calls.at(-1)[0];
-    // original order: [clock, focus, bookmarks, weatherQuote]
-    // clock moves to index 3: [focus, bookmarks, weatherQuote, clock]
-    expect(next.map((w: { kind: string }) => w.kind)).toEqual(['focus', 'bookmarks', 'weatherQuote', 'clock']);
+    // Visible tiles are [clock, focus, bookmarks, weatherQuote] (new widgets are hidden).
+    // clock (index 0) dropped onto index 3 in visible order:
+    const kinds = next.map((w: { kind: string }) => w.kind);
+    expect(kinds[0]).toBe('focus');
+    expect(kinds[1]).toBe('bookmarks');
+    expect(kinds[2]).toBe('weatherQuote');
+    expect(kinds[3]).toBe('clock');
   });
 });

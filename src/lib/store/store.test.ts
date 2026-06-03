@@ -15,7 +15,7 @@ describe('store', () => {
   it('returns default state when nothing is stored', async () => {
     const s = await loadState();
     expect(s.themeId).toBe('dark-neon-dev');
-    expect(s.widgets).toHaveLength(4);
+    expect(s.widgets).toHaveLength(8);
   });
 
   it('round-trips a saved state', async () => {
