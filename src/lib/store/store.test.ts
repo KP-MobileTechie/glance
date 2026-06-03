@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { loadState, saveState, updateState } from './store';
 import { defaultState } from './types';
-import { resetDB } from './db';
+import { getDB, resetDB } from './db';
 import FDBFactory from 'fake-indexeddb/lib/FDBFactory';
 
 beforeEach(async () => {
@@ -33,5 +33,11 @@ describe('store', () => {
     const next = await updateState({ userName: 'Krunal' });
     expect(next.userName).toBe('Krunal');
     expect(next.updatedAt).toBeGreaterThan(0);
+  });
+
+  it('IDB v2 schema creates both app and secrets object stores', async () => {
+    const db = await getDB();
+    expect(db.objectStoreNames.contains('app')).toBe(true);
+    expect(db.objectStoreNames.contains('secrets')).toBe(true);
   });
 });
