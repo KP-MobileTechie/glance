@@ -4,11 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { defaultState } from '@/lib/store/types';
 import { SettingsPanel } from './SettingsPanel';
 
-function setup(overrides = {}) {
+function setup(overrides: Record<string, unknown> = {}) {
   const s = defaultState();
   const onChange = vi.fn();
   render(
-    <SettingsPanel open settings={s.settings} userName={s.userName} widgets={s.widgets} onClose={() => {}} onChange={onChange} {...overrides} />,
+    <SettingsPanel open settings={s.settings} userName={s.userName} weatherCity={null} widgets={s.widgets} onClose={() => {}} onChange={onChange} {...overrides} />,
   );
   return { onChange };
 }
@@ -33,5 +33,16 @@ describe('SettingsPanel', () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ widgets: expect.any(Array) }));
     const arg = onChange.mock.calls.at(-1)[0].widgets.find((w: { kind: string }) => w.kind === 'focus');
     expect(arg.hidden).toBe(true);
+  });
+
+  it('renders a weather city input with geolocation placeholder', () => {
+    setup({ weatherCity: null });
+    expect(screen.getByPlaceholderText(/auto.*geolocation/i)).toBeInTheDocument();
+  });
+
+  it('calls onChange with weatherCity when city input changes', async () => {
+    const { onChange } = setup({ weatherCity: null });
+    await userEvent.type(screen.getByPlaceholderText(/auto.*geolocation/i), 'Tokyo');
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ weatherCity: 'Tokyo' }));
   });
 });
