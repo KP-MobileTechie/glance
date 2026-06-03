@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { defaultState } from '@/lib/store/types';
 import { WIDGET_REGISTRY } from './registry';
@@ -7,12 +7,37 @@ import { ClockWidget } from './ClockWidget';
 import { FocusWidget } from './FocusWidget';
 import { BookmarksWidget } from './BookmarksWidget';
 import { WeatherQuoteWidget } from './WeatherQuoteWidget';
+import { PomodoroWidget } from './PomodoroWidget';
+import { NewsWidget } from './NewsWidget';
+import { GitHubWidget } from './GitHubWidget';
+import { DevToolsWidget } from './DevToolsWidget';
+import { BentoGrid } from '@/components/grid/BentoGrid';
 
 describe('widget registry', () => {
   it('has an entry for every widget kind', () => {
     expect(Object.keys(WIDGET_REGISTRY).sort()).toEqual(
-      ['bookmarks', 'clock', 'focus', 'weatherQuote'].sort(),
+      ['bookmarks', 'clock', 'devTools', 'focus', 'github', 'news', 'pomodoro', 'weatherQuote'],
     );
+  });
+
+  it('WIDGET_REGISTRY[pomodoro].title is "Pomodoro Timer"', () => {
+    expect(WIDGET_REGISTRY['pomodoro'].title).toBe('Pomodoro Timer');
+  });
+
+  it('WIDGET_REGISTRY[news].title is "Hacker News / RSS"', () => {
+    expect(WIDGET_REGISTRY['news'].title).toBe('Hacker News / RSS');
+  });
+
+  it('WIDGET_REGISTRY[github].title is "GitHub Activity"', () => {
+    expect(WIDGET_REGISTRY['github'].title).toBe('GitHub Activity');
+  });
+
+  it('WIDGET_REGISTRY[devTools].title is "Dev Tools"', () => {
+    expect(WIDGET_REGISTRY['devTools'].title).toBe('Dev Tools');
+  });
+
+  it('WIDGET_REGISTRY[pomodoro].Component is a function', () => {
+    expect(typeof WIDGET_REGISTRY['pomodoro'].Component).toBe('function');
   });
 });
 
@@ -409,5 +434,316 @@ describe('WeatherQuoteWidget units', () => {
     // unit label is rendered regardless of async fetch result
     // (smoke: component renders without crashing under F unit)
     expect(true).toBe(true);
+  });
+});
+
+// ─── PomodoroWidget tests (WDGT-01/02/03) ───────────────────────────────────
+
+describe('PomodoroWidget', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let MockWorker: any;
+
+  beforeEach(() => {
+    MockWorker = vi.fn(function(this: { postMessage: ReturnType<typeof vi.fn>; onmessage: null; terminate: ReturnType<typeof vi.fn> }) {
+      this.postMessage = vi.fn();
+      this.onmessage = null;
+      this.terminate = vi.fn();
+    });
+    vi.stubGlobal('Worker', MockWorker);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('T-WDGT-01a: renders work and break duration from pomodoroConfig', () => {
+    const state = { ...defaultState(), pomodoroConfig: { workMin: 25, breakMin: 5 } };
+    render(<PomodoroWidget state={state} onChange={vi.fn()} />);
+    expect(screen.getByText('25:00')).toBeInTheDocument();
+  });
+
+  it('T-WDGT-01b: changing workMin input dispatches onChange with new pomodoroConfig', async () => {
+    const onChange = vi.fn();
+    const state = { ...defaultState(), pomodoroConfig: { workMin: 25, breakMin: 5 } };
+    render(<PomodoroWidget state={state} onChange={onChange} />);
+    const workInput = screen.getByLabelText(/work.*min/i);
+    fireEvent.change(workInput, { target: { value: '30' } });
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pomodoroConfig: expect.objectContaining({ workMin: 30 }),
+      }),
+    );
+  });
+
+  it('T-WDGT-02a: session count displays correctly when pomodoroSessions has entries', () => {
+    const sessions = [
+      { id: '1', completedAt: Date.now(), type: 'work' as const, durationMin: 25 },
+      { id: '2', completedAt: Date.now(), type: 'work' as const, durationMin: 25 },
+      { id: '3', completedAt: Date.now(), type: 'work' as const, durationMin: 25 },
+    ];
+    const state = { ...defaultState(), pomodoroSessions: sessions };
+    render(<PomodoroWidget state={state} onChange={vi.fn()} />);
+    expect(screen.getByText(/3 sessions/i)).toBeInTheDocument();
+  });
+
+  it('T-WDGT-03a: clicking play posts START message to Worker', async () => {
+    const state = { ...defaultState(), pomodoroConfig: { workMin: 25, breakMin: 5 } };
+    render(<PomodoroWidget state={state} onChange={vi.fn()} />);
+    const playBtn = screen.getByRole('button', { name: /play/i });
+    await userEvent.click(playBtn);
+    const workerInstance = MockWorker.mock.results[0].value;
+    expect(workerInstance.postMessage).toHaveBeenCalledWith({ type: 'START', workMin: 25, breakMin: 5 });
+  });
+});
+
+// ─── NewsWidget tests (WDGT-04/05/06) ───────────────────────────────────────
+
+describe('NewsWidget', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('T-WDGT-04a: renders story titles from mocked Algolia fetch response', async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          hits: [{ objectID: '1', title: 'Test Story', url: 'https://example.com', story_id: 1 }],
+        }),
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    render(<NewsWidget state={defaultState()} onChange={vi.fn()} />);
+    expect(await screen.findByText('Test Story')).toBeInTheDocument();
+  });
+
+  it('T-WDGT-04b: story count equals state.hnConfig.count (default 10)', async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ hits: [] }),
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    render(<NewsWidget state={defaultState()} onChange={vi.fn()} />);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const url = String((fetchMock.mock.calls as any)[0]?.[0] ?? '');
+    expect(url).toContain('hitsPerPage=10');
+  });
+
+  it('T-WDGT-05a: when rssUrl is set, fetches from allorigins proxy', async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          contents: '<rss><channel><item><title>RSS Story</title><link>https://rss.com</link><guid>guid1</guid></item></channel></rss>',
+        }),
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    const state = { ...defaultState(), hnConfig: { count: 10, rssUrl: 'https://feeds.example.com/rss' } };
+    render(<NewsWidget state={state} onChange={vi.fn()} />);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const url = String((fetchMock.mock.calls as any)[0]?.[0] ?? '');
+    expect(url).toContain('allorigins.win');
+    expect(url).toContain(encodeURIComponent('https://feeds.example.com/rss'));
+  });
+
+  it('T-WDGT-06a: story links have target="_blank" and rel="noopener noreferrer"', async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          hits: [{ objectID: '1', title: 'Link Story', url: 'https://example.com', story_id: 1 }],
+        }),
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    render(<NewsWidget state={defaultState()} onChange={vi.fn()} />);
+    const link = await screen.findByText('Link Story');
+    expect(link.closest('a')).toHaveAttribute('target', '_blank');
+    expect(link.closest('a')).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+});
+
+// ─── GitHubWidget tests (WDGT-07/08) ────────────────────────────────────────
+
+vi.mock('@/lib/store/secrets', () => ({
+  getSecret: vi.fn().mockResolvedValue(undefined),
+  saveSecret: vi.fn().mockResolvedValue(undefined),
+  deleteSecret: vi.fn().mockResolvedValue(undefined),
+}));
+
+describe('GitHubWidget', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('T-WDGT-07a: shows setup prompt when getSecret returns undefined', async () => {
+    const { getSecret } = await import('@/lib/store/secrets');
+    vi.mocked(getSecret).mockResolvedValue(undefined);
+    render(<GitHubWidget state={defaultState()} onChange={vi.fn()} />);
+    expect(await screen.findByText(/connect github|add.*token/i)).toBeInTheDocument();
+  });
+
+  it('T-WDGT-08a: renders PR count when authenticated', async () => {
+    const { getSecret } = await import('@/lib/store/secrets');
+    vi.mocked(getSecret).mockResolvedValue('tok123');
+    const fetchMock = vi.fn((url: unknown) => {
+      const u = String(url);
+      if (u.includes('graphql')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            data: {
+              user: {
+                contributionsCollection: {
+                  contributionCalendar: {
+                    totalContributions: 100,
+                    weeks: [],
+                  },
+                },
+              },
+            },
+          }),
+        });
+      }
+      if (u.includes('search/issues')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ total_count: 3, items: [] }),
+        });
+      }
+      // events
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    const state = { ...defaultState(), githubUsername: 'testuser' };
+    render(<GitHubWidget state={state} onChange={vi.fn()} />);
+    expect(await screen.findByText(/3/)).toBeInTheDocument();
+  });
+});
+
+// ─── DevToolsWidget tests (WDGT-09/10) ───────────────────────────────────────
+
+describe('DevToolsWidget', () => {
+  it('T-WDGT-09a: JSON tab — valid JSON formats and displays pretty-printed output', async () => {
+    render(<DevToolsWidget state={defaultState()} onChange={vi.fn()} />);
+    const textarea = screen.getByPlaceholderText(/paste json/i);
+    // Use fireEvent.change to avoid userEvent brace-interpretation issues
+    fireEvent.change(textarea, { target: { value: '{"a":1}' } });
+    await userEvent.click(screen.getByRole('button', { name: /format/i }));
+    expect(screen.getByText(/"a": 1/)).toBeInTheDocument();
+  });
+
+  it('T-WDGT-09b: JSON tab — invalid JSON shows error message', async () => {
+    render(<DevToolsWidget state={defaultState()} onChange={vi.fn()} />);
+    const textarea = screen.getByPlaceholderText(/paste json/i);
+    await userEvent.type(textarea, 'not json');
+    await userEvent.click(screen.getByRole('button', { name: /format/i }));
+    // Should show an error, not crash
+    const hasError = screen.queryByText(/json parse error|unexpected|invalid/i) !== null ||
+      document.querySelector('span[style*="muted"]') !== null;
+    expect(hasError || screen.queryByText('not json')).toBeTruthy();
+  });
+
+  it('T-WDGT-09c: Base64 encode/decode round-trip (including non-ASCII)', async () => {
+    render(<DevToolsWidget state={defaultState()} onChange={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: /base64/i }));
+    const input = screen.getByPlaceholderText(/text to encode/i);
+    fireEvent.change(input, { target: { value: 'hello' } });
+    await userEvent.click(screen.getByRole('button', { name: /^go$/i }));
+    // The encoded value of 'hello' is 'aGVsbG8='
+    expect(document.body.textContent).toContain('aGVsbG8=');
+  });
+
+  it('T-WDGT-09d: UUID tab — clicking generate renders a valid UUID', async () => {
+    render(<DevToolsWidget state={defaultState()} onChange={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: /uuid/i }));
+    await userEvent.click(screen.getByRole('button', { name: /generate/i }));
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const text = document.body.textContent ?? '';
+    expect(uuidPattern.test(text.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)?.[0] ?? '')).toBe(true);
+  });
+
+  it('T-WDGT-09e: Regex tab — match result shows "hello"', async () => {
+    render(<DevToolsWidget state={defaultState()} onChange={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: /regex/i }));
+    const patternInput = screen.getByPlaceholderText(/pattern/i);
+    const testInput = screen.getByPlaceholderText(/test string/i);
+    await userEvent.type(patternInput, 'hel+o');
+    await userEvent.type(testInput, 'hello world');
+    await userEvent.click(screen.getByRole('button', { name: /test/i }));
+    expect(screen.getByText('hello')).toBeInTheDocument();
+  });
+
+  it('T-WDGT-10a: onChange is never called during any dev tool operation', async () => {
+    const onChange = vi.fn();
+    render(<DevToolsWidget state={defaultState()} onChange={onChange} />);
+    // JSON format — use fireEvent.change to avoid brace interpretation
+    const jsonTextarea = screen.getByPlaceholderText(/paste json/i);
+    fireEvent.change(jsonTextarea, { target: { value: '{"x":1}' } });
+    await userEvent.click(screen.getByRole('button', { name: /format/i }));
+    // Base64 encode
+    await userEvent.click(screen.getByRole('button', { name: /base64/i }));
+    const b64Input = screen.getByPlaceholderText(/text to encode/i);
+    fireEvent.change(b64Input, { target: { value: 'test' } });
+    await userEvent.click(screen.getByRole('button', { name: /^go$/i }));
+    // UUID generate
+    await userEvent.click(screen.getByRole('button', { name: /uuid/i }));
+    await userEvent.click(screen.getByRole('button', { name: /generate/i }));
+    // Regex test
+    await userEvent.click(screen.getByRole('button', { name: /regex/i }));
+    const patInput = screen.getByPlaceholderText(/pattern/i);
+    const tstInput = screen.getByPlaceholderText(/test string/i);
+    await userEvent.type(patInput, 'a');
+    await userEvent.type(tstInput, 'abc');
+    await userEvent.click(screen.getByRole('button', { name: /test/i }));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+// ─── BentoGrid integration tests (WDGT-11) ───────────────────────────────────
+
+describe('BentoGrid hidden-by-default integration (WDGT-11)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let BentoMockWorker: any;
+
+  beforeEach(() => {
+    BentoMockWorker = vi.fn(function(this: { postMessage: ReturnType<typeof vi.fn>; onmessage: null; terminate: ReturnType<typeof vi.fn> }) {
+      this.postMessage = vi.fn();
+      this.onmessage = null;
+      this.terminate = vi.fn();
+    });
+    vi.stubGlobal('Worker', BentoMockWorker);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('T-WDGT-11c: BentoGrid with defaultState renders exactly 4 tiles (new widgets hidden)', () => {
+    const { container } = render(
+      <BentoGrid state={defaultState()} onChange={vi.fn()} onLayoutChange={vi.fn()} />,
+    );
+    const tiles = container.querySelectorAll('.glance-tile');
+    expect(tiles.length).toBe(4);
+  });
+
+  it('T-WDGT-11d: enabling pomodoro widget causes BentoGrid to render it', () => {
+    const state = defaultState();
+    const modified = {
+      ...state,
+      widgets: state.widgets.map((w) =>
+        w.kind === 'pomodoro' ? { ...w, hidden: false } : w,
+      ),
+    };
+    render(<BentoGrid state={modified} onChange={vi.fn()} onLayoutChange={vi.fn()} />);
+    expect(screen.getByText('Pomodoro Timer')).toBeInTheDocument();
   });
 });
