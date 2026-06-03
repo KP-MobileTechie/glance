@@ -6,7 +6,22 @@ export type WidgetKind = (typeof WIDGET_KINDS)[number];
 export interface WidgetSpan { w: number; h: number; }
 export interface WidgetInstance { id: string; kind: WidgetKind; span: WidgetSpan; hidden: boolean; }
 
-export interface Todo { id: string; text: string; done: boolean; }
+export type TodoPriority = 'P1' | 'P2' | 'P3' | 'P4';
+
+export interface Todo {
+  id: string;
+  text: string;
+  done: boolean;
+  priority?: TodoPriority;
+  dueDate?: string;
+}
+
+export interface TodoList {
+  id: string;
+  name: string;
+  todos: Todo[];
+}
+
 export interface Bookmark { id: string; label: string; url: string; }
 
 export type SearchEngine = 'google' | 'duckduckgo' | 'bing' | 'brave';
@@ -31,6 +46,8 @@ export interface AppState {
   userName: string;
   focus: string;
   todos: Todo[];
+  todoLists: TodoList[];
+  activeTodoListId: string | null;
   bookmarks: Bookmark[];
   weatherCity: string | null;
   settings: Settings;
@@ -57,6 +74,8 @@ export function defaultState(): AppState {
     userName: '',
     focus: '',
     todos: [],
+    todoLists: [{ id: 'default', name: 'tasks', todos: [] }],
+    activeTodoListId: 'default',
     bookmarks: [],
     weatherCity: null,
     settings: { ...DEFAULT_SETTINGS },
@@ -122,13 +141,21 @@ export function migrateState(raw: unknown): AppState {
     }
   }
 
+  const legacyTodos: Todo[] = Array.isArray(r.todos) ? r.todos : [];
+  const hasTodoLists = Array.isArray(r.todoLists) && r.todoLists.length > 0;
+  const todoLists: TodoList[] = hasTodoLists
+    ? (r.todoLists as TodoList[])
+    : [{ id: 'default', name: 'tasks', todos: legacyTodos }];
+
   return {
     widgets,
     themeId: typeof r.themeId === 'string' ? r.themeId : base.themeId,
     customThemes: Array.isArray(r.customThemes) ? (r.customThemes as Theme[]) : [],
     userName: typeof r.userName === 'string' ? r.userName : '',
     focus: typeof r.focus === 'string' ? r.focus : '',
-    todos: Array.isArray(r.todos) ? r.todos : [],
+    todos: legacyTodos,
+    todoLists,
+    activeTodoListId: typeof r.activeTodoListId === 'string' ? r.activeTodoListId : todoLists[0]?.id ?? null,
     bookmarks: Array.isArray(r.bookmarks) ? r.bookmarks : [],
     weatherCity: typeof r.weatherCity === 'string' ? r.weatherCity : null,
     settings: asSettings(r.settings),
