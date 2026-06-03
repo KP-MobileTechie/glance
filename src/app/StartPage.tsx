@@ -233,6 +233,7 @@ export default function StartPage() {
         settings={state.settings}
         userName={state.userName}
         weatherCity={state.weatherCity}
+        githubUsername={state.githubUsername}
         widgets={state.widgets}
         onClose={() => setSettingsOpen(false)}
         onChange={patch}

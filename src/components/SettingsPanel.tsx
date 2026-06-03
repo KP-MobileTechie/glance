@@ -1,18 +1,23 @@
 'use client';
+import { useState } from 'react';
 import type { AppState, Settings, WidgetInstance, SearchEngine } from '@/lib/store/types';
 import { WIDGET_REGISTRY } from '@/components/widgets/registry';
+import { saveSecret } from '@/lib/store/secrets';
 
 export interface SettingsPanelProps {
   open: boolean;
   settings: Settings;
   userName: string;
   weatherCity: string | null;
+  githubUsername?: string;
   widgets: WidgetInstance[];
   onClose: () => void;
   onChange: (patch: Partial<AppState>) => void;
 }
 
-export function SettingsPanel({ open, settings, userName, weatherCity, widgets, onClose, onChange }: SettingsPanelProps) {
+export function SettingsPanel({ open, settings, userName, weatherCity, githubUsername = '', widgets, onClose, onChange }: SettingsPanelProps) {
+  const [patInput, setPatInput] = useState('');
+
   if (!open) return null;
   function setSetting<K extends keyof Settings>(key: K, value: Settings[K]) {
     onChange({ settings: { ...settings, [key]: value } });
@@ -60,6 +65,34 @@ export function SettingsPanel({ open, settings, userName, weatherCity, widgets, 
             onChange={(e) => onChange({ weatherCity: e.target.value || null })}
           />
         </label>
+
+        {/* GitHub settings */}
+        <span className="glance-label">github</span>
+        <input
+          type="text"
+          className="glance-input"
+          placeholder="GitHub username"
+          value={githubUsername}
+          onChange={(e) => onChange({ githubUsername: e.target.value })}
+        />
+        <div className="flex gap-2">
+          <input
+            type="password"
+            className="glance-input flex-1"
+            placeholder="Personal access token"
+            value={patInput}
+            onChange={(e) => setPatInput(e.target.value)}
+            autoComplete="new-password"
+          />
+          <button
+            type="button"
+            className="glance-chip text-xs"
+            onClick={async () => { await saveSecret('github_token', patInput); setPatInput(''); }}
+            disabled={!patInput}
+          >
+            save
+          </button>
+        </div>
 
         <label className="glance-field-row">search engine
           <select className="glance-field" aria-label="search engine" value={settings.searchEngine}
