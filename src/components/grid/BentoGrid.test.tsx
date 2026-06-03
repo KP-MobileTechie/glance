@@ -50,7 +50,25 @@ describe('BentoGrid', () => {
     expect(onLayoutChange).toHaveBeenCalled();
     const next = onLayoutChange.mock.calls.at(-1)[0];
     // original order: [clock, focus, bookmarks, weatherQuote]
-    // moving index 0 before index 2 => [focus, clock, bookmarks, weatherQuote]
-    expect(next.map((w: { kind: string }) => w.kind)).toEqual(['focus', 'clock', 'bookmarks', 'weatherQuote']);
+    // clock (index 0) dropped onto bookmarks (index 2): after splice removes clock,
+    // array is [focus, bookmarks, weatherQuote]; insertAt = 2 => [focus, bookmarks, clock, weatherQuote]
+    expect(next.map((w: { kind: string }) => w.kind)).toEqual(['focus', 'bookmarks', 'clock', 'weatherQuote']);
+  });
+
+  it('reorders widgets correctly when dragging from index 0 to index 3', () => {
+    const onLayoutChange = vi.fn();
+    const s = defaultState();
+    const { container } = render(<BentoGrid state={s} onChange={() => {}} onLayoutChange={onLayoutChange} />);
+    const tiles = container.querySelectorAll('.glance-tile');
+    const dataTransfer = { effectAllowed: '', dropEffect: '', setData: () => {}, getData: () => '' };
+    fireEvent.dragStart(tiles[0], { dataTransfer });
+    fireEvent.dragEnter(tiles[3]);
+    fireEvent.dragOver(tiles[3]);
+    fireEvent.drop(tiles[3]);
+    expect(onLayoutChange).toHaveBeenCalled();
+    const next = onLayoutChange.mock.calls.at(-1)[0];
+    // original order: [clock, focus, bookmarks, weatherQuote]
+    // clock moves to index 3: [focus, bookmarks, weatherQuote, clock]
+    expect(next.map((w: { kind: string }) => w.kind)).toEqual(['focus', 'bookmarks', 'weatherQuote', 'clock']);
   });
 });
