@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import type { AppState } from '@/lib/store/types';
 import { WIDGET_REGISTRY } from '@/components/widgets/registry';
+import { WidgetErrorBoundary } from '@/components/WidgetErrorBoundary';
 
 export interface BentoGridProps {
   state: AppState;
@@ -48,7 +49,9 @@ export function BentoGrid({ state, onChange, onLayoutChange, mobile = false }: B
           return (
             <div key={w.id} className="glance-tile p-6" style={{ minHeight: w.kind === 'clock' ? 190 : 150 }}>
               <span className="sr-only">{title}</span>
-              <Component state={state} onChange={onChange} />
+              <WidgetErrorBoundary title={title}>
+                <Component state={state} onChange={onChange} />
+              </WidgetErrorBoundary>
             </div>
           );
         })}
@@ -85,7 +88,9 @@ export function BentoGrid({ state, onChange, onLayoutChange, mobile = false }: B
             <button type="button" aria-label={`resize ${title}`} className="glance-resize" onClick={() => cycleSize(w.id)}>
               &#10530;
             </button>
-            <Component state={state} onChange={onChange} />
+            <WidgetErrorBoundary title={title}>
+              <Component state={state} onChange={onChange} />
+            </WidgetErrorBoundary>
           </div>
         );
       })}
