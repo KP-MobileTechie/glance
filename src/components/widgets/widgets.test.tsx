@@ -121,6 +121,93 @@ describe('FocusWidget todos', () => {
   });
 });
 
+describe('FocusWidget todos — priority, due date, overdue (PROD-01/02/03)', () => {
+  it('Test A (PROD-01 store): adding a task with priority P1 dispatches onChange with priority: "P1"', async () => {
+    const onChange = vi.fn();
+    render(<FocusWidget state={defaultState()} onChange={onChange} />);
+    const prioritySelect = screen.getByRole('combobox', { name: /priority/i });
+    await userEvent.selectOptions(prioritySelect, 'P1');
+    const addInput = screen.getByPlaceholderText(/add a task/i);
+    await userEvent.type(addInput, 'urgent task{Enter}');
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        todoLists: expect.arrayContaining([
+          expect.objectContaining({
+            todos: expect.arrayContaining([
+              expect.objectContaining({ text: 'urgent task', priority: 'P1' }),
+            ]),
+          }),
+        ]),
+      }),
+    );
+  });
+
+  it('Test B (PROD-01 render): a todo with priority P1 renders a badge with text "P1"', () => {
+    const state = {
+      ...defaultState(),
+      todoLists: [{ id: 'default', name: 'tasks', todos: [{ id: 't1', text: 'urgent', done: false, priority: 'P1' as const }] }],
+      activeTodoListId: 'default',
+    };
+    render(<FocusWidget state={state} onChange={vi.fn()} />);
+    expect(screen.getByText('P1')).toBeInTheDocument();
+  });
+
+  it('Test C (PROD-01 silent P3): a todo with priority undefined renders no priority badge', () => {
+    const state = {
+      ...defaultState(),
+      todoLists: [{ id: 'default', name: 'tasks', todos: [{ id: 't1', text: 'normal task', done: false }] }],
+      activeTodoListId: 'default',
+    };
+    render(<FocusWidget state={state} onChange={vi.fn()} />);
+    expect(screen.queryByText('P1')).not.toBeInTheDocument();
+    expect(screen.queryByText('P2')).not.toBeInTheDocument();
+    expect(screen.queryByText('P3')).not.toBeInTheDocument();
+    expect(screen.queryByText('P4')).not.toBeInTheDocument();
+  });
+
+  it('Test D (PROD-02 store): adding a task with dueDate dispatches onChange with dueDate: "2026-06-20"', async () => {
+    const onChange = vi.fn();
+    render(<FocusWidget state={defaultState()} onChange={onChange} />);
+    const dateInput = screen.getByLabelText(/due date/i);
+    await userEvent.type(dateInput, '2026-06-20');
+    const addInput = screen.getByPlaceholderText(/add a task/i);
+    await userEvent.type(addInput, 'dated task{Enter}');
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        todoLists: expect.arrayContaining([
+          expect.objectContaining({
+            todos: expect.arrayContaining([
+              expect.objectContaining({ text: 'dated task', dueDate: '2026-06-20' }),
+            ]),
+          }),
+        ]),
+      }),
+    );
+  });
+
+  it('Test E (PROD-03 overdue): a past-due incomplete todo renders with red color #f87171', () => {
+    const state = {
+      ...defaultState(),
+      todoLists: [{ id: 'default', name: 'tasks', todos: [{ id: 't1', text: 'overdue task', done: false, dueDate: '2020-01-01' }] }],
+      activeTodoListId: 'default',
+    };
+    render(<FocusWidget state={state} onChange={vi.fn()} />);
+    const textSpan = screen.getByText('overdue task');
+    expect(textSpan).toHaveStyle({ color: '#f87171' });
+  });
+
+  it('Test F (PROD-03 done exempt): a past-due done todo does NOT have red #f87171 color', () => {
+    const state = {
+      ...defaultState(),
+      todoLists: [{ id: 'default', name: 'tasks', todos: [{ id: 't1', text: 'done overdue', done: true, dueDate: '2020-01-01' }] }],
+      activeTodoListId: 'default',
+    };
+    render(<FocusWidget state={state} onChange={vi.fn()} />);
+    const textSpan = screen.getByText('done overdue');
+    expect(textSpan).not.toHaveStyle({ color: '#f87171' });
+  });
+});
+
 describe('WeatherQuoteWidget city fallback', () => {
   it('lets the user enter a city when geolocation is unavailable and persists it', async () => {
     // jsdom has no navigator.geolocation, so we stub it to call the error callback
