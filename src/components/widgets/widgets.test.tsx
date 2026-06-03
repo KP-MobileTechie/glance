@@ -211,6 +211,57 @@ describe('FocusWidget todos — priority, due date, overdue (PROD-01/02/03)', ()
   });
 });
 
+describe('FocusWidget multi-list tabs (PROD-04/05)', () => {
+  it('Test G (PROD-04 create): clicking "+ list" and entering "Work" dispatches onChange with new list', async () => {
+    const onChange = vi.fn();
+    render(<FocusWidget state={defaultState()} onChange={onChange} />);
+    const addListBtn = screen.getByRole('button', { name: /\+ list/i });
+    await userEvent.click(addListBtn);
+    const nameInput = screen.getByPlaceholderText(/list name/i);
+    await userEvent.type(nameInput, 'Work{Enter}');
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        todoLists: expect.arrayContaining([
+          expect.objectContaining({ id: expect.any(String), name: 'Work', todos: [] }),
+        ]),
+      }),
+    );
+  });
+
+  it('Test H (PROD-05 switch): tasks from active list render; tasks from inactive list do not', () => {
+    const state = {
+      ...defaultState(),
+      todoLists: [
+        { id: 'default', name: 'tasks', todos: [{ id: 't1', text: 'default task', done: false }] },
+        { id: 'work', name: 'Work', todos: [{ id: 't2', text: 'work task', done: false }] },
+      ],
+      activeTodoListId: 'work',
+    };
+    render(<FocusWidget state={state} onChange={vi.fn()} />);
+    expect(screen.getByText('work task')).toBeInTheDocument();
+    expect(screen.queryByText('default task')).not.toBeInTheDocument();
+  });
+
+  it('Test I (PROD-05 delete active): deleting the active list resets activeTodoListId to null', async () => {
+    const onChange = vi.fn();
+    const state = {
+      ...defaultState(),
+      todoLists: [
+        { id: 'default', name: 'tasks', todos: [] },
+        { id: 'work', name: 'Work', todos: [] },
+      ],
+      activeTodoListId: 'work',
+    };
+    render(<FocusWidget state={state} onChange={onChange} />);
+    // Click the × button on the Work tab (the active list)
+    const deleteBtn = screen.getByRole('button', { name: /delete Work/i });
+    await userEvent.click(deleteBtn);
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ activeTodoListId: null }),
+    );
+  });
+});
+
 describe('WeatherQuoteWidget city fallback', () => {
   it('lets the user enter a city when geolocation is unavailable and persists it', async () => {
     // jsdom has no navigator.geolocation, so we stub it to call the error callback
