@@ -22,4 +22,12 @@ describe('AuthButton', () => {
     screen.getByRole('button', { name: /sign out/i }).click();
     expect(onSignOut).toHaveBeenCalled();
   });
+
+  it('shows "connecting…" and is disabled while isPending is true', () => {
+    render(<AuthButton enabled={true} user={null} isPending={true} onSignIn={() => {}} onSignOut={() => {}} />);
+    const btn = screen.getByRole('button');
+    expect(btn).toHaveTextContent('connecting…');
+    expect(btn).toBeDisabled();
+    expect(btn).toHaveAttribute('aria-busy', 'true');
+  });
 });
