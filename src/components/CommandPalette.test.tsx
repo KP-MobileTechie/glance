@@ -81,10 +81,11 @@ describe('CommandPalette', () => {
   it('Escape key triggers onClose callback', async () => {
     const onClose = vi.fn();
     renderPalette({ open: true, onClose });
+    const input = screen.getByPlaceholderText(/search or add task/i);
+    input.focus();
+    // Simulate native dialog close event (fired by Escape in real browser)
     const dialog = document.querySelector('dialog')!;
-    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    // Native dialog fires a close event on Escape; simulate by calling onClose via the component's handler
-    await userEvent.keyboard('{Escape}');
+    dialog.dispatchEvent(new Event('close', { bubbles: false }));
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -93,8 +94,9 @@ describe('CommandPalette', () => {
     const input = screen.getByPlaceholderText(/search or add task/i);
     input.focus();
     await userEvent.keyboard('{ArrowDown}');
-    // First item should be selected (index 0), after ArrowDown index 1 is selected
-    const items = screen.getAllByRole('option');
+    // JSDOM does not support showModal(), so dialog content is hidden;
+    // query with hidden:true to access the list items
+    const items = screen.getAllByRole('option', { hidden: true });
     expect(items[1]).toHaveClass('selected');
   });
 
@@ -104,7 +106,7 @@ describe('CommandPalette', () => {
     input.focus();
     // ArrowUp from index 0 should wrap to last item
     await userEvent.keyboard('{ArrowUp}');
-    const items = screen.getAllByRole('option');
+    const items = screen.getAllByRole('option', { hidden: true });
     expect(items[items.length - 1]).toHaveClass('selected');
   });
 

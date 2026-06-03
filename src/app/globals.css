@@ -489,3 +489,65 @@ select.glance-field { background-color: var(--glance-bg); color: var(--glance-te
   box-shadow: 0 10px 30px -12px var(--glance-accent-glow);
   animation: glance-fade-up .25s ease both;
 }
+
+/* ---------- Command Palette ---------- */
+.glance-palette {
+  background: var(--glance-surface);
+  border: 1px solid var(--glance-border);
+  border-radius: var(--glance-radius);
+  padding: 0;
+  width: min(560px, 92vw);
+  max-height: 60vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px color-mix(in oklab, #000 40%, transparent);
+  /* position at ~18vh from top */
+  margin-top: 18vh;
+  margin-bottom: auto;
+}
+.glance-palette[open] { display: flex; }
+.glance-palette::backdrop {
+  background: color-mix(in oklab, #000 55%, transparent);
+  backdrop-filter: blur(3px);
+}
+.glance-palette-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.glance-palette input.glance-input {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  flex-shrink: 0;
+}
+.glance-palette-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0;
+  overflow-y: auto;
+}
+.glance-palette-item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+  color: var(--glance-text);
+}
+.glance-palette-item.selected,
+.glance-palette-item:hover {
+  background: color-mix(in oklab, var(--glance-accent) 10%, transparent);
+  color: var(--glance-accent);
+}
+.glance-palette-group {
+  font-size: 0.7rem;
+  color: var(--glance-muted);
+  min-width: 3.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
