@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { defaultState } from '@/lib/store/types';
@@ -120,6 +120,74 @@ describe('ClockWidget formats', () => {
   it('shows 24-hour time by default', () => {
     render(<ClockWidget state={defaultState()} onChange={() => {}} now={new Date('2026-05-30T13:05:00')} />);
     expect(screen.getByText((_, el) => el?.classList.contains('glance-hhmm') === true && el?.textContent === '13:05')).toBeInTheDocument();
+  });
+});
+
+describe('WeatherQuoteWidget error states', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it('shows "location access denied" when geolocation permission is denied', async () => {
+    vi.stubGlobal('navigator', {
+      ...navigator,
+      geolocation: {
+        getCurrentPosition: (_s: PositionCallback, e: PositionErrorCallback) =>
+          e({} as GeolocationPositionError),
+      },
+    });
+    render(<WeatherQuoteWidget state={defaultState()} onChange={vi.fn()} />);
+    expect(await screen.findByText(/location access denied/i)).toBeInTheDocument();
+  });
+
+  it('shows "city not found" when geocoding returns no result', async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ results: [] }),
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    const state = { ...defaultState(), weatherCity: 'NowhereCity' };
+    render(<WeatherQuoteWidget state={state} onChange={vi.fn()} />);
+    expect(await screen.findByText(/city not found/i)).toBeInTheDocument();
+  });
+
+  it('shows "weather unavailable" when the network/fetch fails', async () => {
+    const fetchMock = vi.fn(() => Promise.reject(new Error('network fail')));
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    const state = { ...defaultState(), weatherCity: 'London' };
+    render(<WeatherQuoteWidget state={state} onChange={vi.fn()} />);
+    expect(await screen.findByText(/weather unavailable/i)).toBeInTheDocument();
+  });
+
+  it('auto-refreshes after 10 minutes and clears interval on unmount', async () => {
+    vi.useFakeTimers();
+    const weatherFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ results: [{ latitude: 51.5, longitude: -0.12, name: 'London' }] }),
+    });
+    vi.stubGlobal('fetch', weatherFetch as unknown as typeof fetch);
+    const state = { ...defaultState(), weatherCity: 'London' };
+    const { unmount } = render(<WeatherQuoteWidget state={state} onChange={vi.fn()} />);
+    // Let the initial load micro-tasks settle (promises resolve without advancing wall-clock)
+    await Promise.resolve();
+    await Promise.resolve();
+    const callsAfterMount = weatherFetch.mock.calls.length;
+    // Advance exactly 10 minutes to fire the interval once, then drain microtasks
+    vi.advanceTimersByTime(10 * 60 * 1000);
+    // Drain microtask queue so all pending fetch promises from the interval load() resolve
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    expect(weatherFetch.mock.calls.length).toBeGreaterThan(callsAfterMount);
+    // Unmount clears the interval — no further fetches after unmount
+    unmount();
+    // Drain any remaining microtasks from the last load() call
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    const callsAfterUnmount = weatherFetch.mock.calls.length;
+    vi.advanceTimersByTime(10 * 60 * 1000);
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    expect(weatherFetch.mock.calls.length).toBe(callsAfterUnmount);
   });
 });
 
