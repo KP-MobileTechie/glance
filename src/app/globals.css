@@ -210,11 +210,15 @@ main { position: relative; z-index: 1; }
   background:
     linear-gradient(180deg, color-mix(in oklab, var(--glance-text) 5%, transparent) 0%, transparent 22%),
     var(--glance-surface);
-  border: 1px solid var(--glance-border);
+  border: 1px solid color-mix(in oklab, var(--glance-border) 80%, var(--glance-accent) 20%);
   box-shadow:
-    inset 0 1px 0 0 color-mix(in oklab, var(--glance-text) 9%, transparent),
-    0 20px 45px -28px rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(10px) saturate(1.05);
+    inset 0 1px 0 0 color-mix(in oklab, var(--glance-text) 12%, transparent),
+    inset 0 -1px 0 0 color-mix(in oklab, var(--glance-border) 40%, transparent),
+    0 4px 6px -2px rgba(0, 0, 0, 0.3),
+    0 20px 50px -20px rgba(0, 0, 0, 0.9),
+    0 0 0 1px color-mix(in oklab, var(--glance-border) 60%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4) brightness(1.03);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4) brightness(1.03);
   overflow: hidden;
   transition: transform .28s cubic-bezier(.2,.7,.2,1), box-shadow .28s, border-color .28s;
 }
@@ -222,9 +226,10 @@ main { position: relative; z-index: 1; }
   transform: translateY(-3px);
   border-color: color-mix(in oklab, var(--glance-accent) 45%, var(--glance-border));
   box-shadow:
-    inset 0 1px 0 0 color-mix(in oklab, var(--glance-text) 12%, transparent),
+    inset 0 1px 0 0 color-mix(in oklab, var(--glance-text) 14%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, var(--glance-border) 80%, transparent),
     0 0 0 1px color-mix(in oklab, var(--glance-accent) 22%, transparent),
-    0 28px 55px -26px var(--glance-accent-glow);
+    0 30px 60px -24px var(--glance-accent-glow);
 }
 /* Corner bracket detail for the HUD feel. */
 .glance-tile::after {
