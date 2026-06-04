@@ -20,6 +20,8 @@ import { IconLogo } from '@/components/icons/icons';
 import { useIsMobile } from '@/lib/useMediaQuery';
 import { CommandPalette } from '@/components/CommandPalette';
 import type { PaletteCommand } from '@/components/CommandPalette';
+import { AuroraBackground } from '@/components/AuroraBackground';
+import { ParticleBackground } from '@/components/ParticleBackground';
 
 const SEARCH_ENGINES: SearchEngine[] = ['google', 'duckduckgo', 'bing', 'brave'];
 
@@ -192,6 +194,8 @@ export default function StartPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-8">
+      <AuroraBackground enabled={state.background === 'aurora'} />
+      <ParticleBackground enabled={state.background === 'particles'} />
       <header className="relative z-10 mb-8 flex flex-wrap items-center justify-between gap-3">
         <span className="glance-wordmark text-lg">
           <span className="glance-logo"><IconLogo /></span>
