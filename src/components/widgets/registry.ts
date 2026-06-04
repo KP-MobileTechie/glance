@@ -9,6 +9,8 @@ import { PomodoroWidget } from './PomodoroWidget';
 import { NewsWidget } from './NewsWidget';
 import { GitHubWidget } from './GitHubWidget';
 import { DevToolsWidget } from './DevToolsWidget';
+import { StandupWidget } from './StandupWidget';
+import { AIChatWidget } from './AIChatWidget';
 
 export interface WidgetManifest {
   kind: WidgetKind;
@@ -25,4 +27,6 @@ export const WIDGET_REGISTRY: Record<WidgetKind, WidgetManifest> = {
   news:         { kind: 'news',         title: 'Hacker News / RSS', Component: NewsWidget },
   github:       { kind: 'github',       title: 'GitHub Activity',   Component: GitHubWidget },
   devTools:     { kind: 'devTools',     title: 'Dev Tools',         Component: DevToolsWidget },
+  standup:      { kind: 'standup',      title: 'Daily Standup',     Component: StandupWidget },
+  aichat:       { kind: 'aichat',       title: 'AI Chat',           Component: AIChatWidget },
 };
