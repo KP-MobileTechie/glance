@@ -1,8 +1,7 @@
-# Internal planning artifacts (GSD scaffolding — not for public repos)
+# Internal planning/scaffolding artifacts (not for public repos)
 .planning/
-
-# Brainstorming companion artifacts
 .superpowers/
+docs/superpowers/
 
 # Dependencies
 node_modules/
