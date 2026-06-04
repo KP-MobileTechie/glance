@@ -16,7 +16,7 @@ import { BentoGrid } from '@/components/grid/BentoGrid';
 describe('widget registry', () => {
   it('has an entry for every widget kind', () => {
     expect(Object.keys(WIDGET_REGISTRY).sort()).toEqual(
-      ['bookmarks', 'clock', 'devTools', 'focus', 'github', 'news', 'pomodoro', 'weatherQuote'],
+      ['aichat', 'bookmarks', 'clock', 'devTools', 'focus', 'github', 'news', 'pomodoro', 'standup', 'weatherQuote'],
     );
   });
 
