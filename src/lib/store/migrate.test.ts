@@ -4,7 +4,7 @@ import { migrateState, defaultState } from './types';
 describe('migrateState', () => {
   it('returns a full default state from garbage input', () => {
     expect(migrateState(null).themeId).toBe('dark-neon-dev');
-    expect(migrateState(42).widgets).toHaveLength(8);
+    expect(migrateState(42).widgets).toHaveLength(10);
     expect(migrateState({}).settings.searchEngine).toBe('google');
   });
 
@@ -22,8 +22,8 @@ describe('migrateState', () => {
     expect(s.widgets[1].kind).toBe('focus');
     expect(s.widgets[0].span).toEqual({ w: 4, h: 3 });
     expect(s.widgets.every((w) => typeof w.hidden === 'boolean')).toBe(true);
-    // missing kinds are added back (all 8 Phase-3 kinds)
-    expect(s.widgets.map((w) => w.kind).sort()).toEqual(['bookmarks', 'clock', 'devTools', 'focus', 'github', 'news', 'pomodoro', 'weatherQuote']);
+    // missing kinds are added back (all 10 Phase-5 kinds)
+    expect(s.widgets.map((w) => w.kind).sort()).toEqual(['aichat', 'bookmarks', 'clock', 'devTools', 'focus', 'github', 'news', 'pomodoro', 'standup', 'weatherQuote']);
     expect(s.themeId).toBe('paper-calm');
   });
 
@@ -36,7 +36,7 @@ describe('migrateState', () => {
   it('passes a current default state through unchanged in shape', () => {
     const d = defaultState();
     const s = migrateState(d);
-    expect(s.widgets).toHaveLength(8);
+    expect(s.widgets).toHaveLength(10);
     expect(s.settings).toEqual(d.settings);
   });
 
@@ -55,6 +55,6 @@ describe('migrateState', () => {
       ],
     });
     expect(s.widgets.filter((w) => w.kind === 'clock')).toHaveLength(1);
-    expect(s.widgets).toHaveLength(8);
+    expect(s.widgets).toHaveLength(10);
   });
 });
