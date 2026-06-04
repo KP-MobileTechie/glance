@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import type { AppState, Settings, WidgetInstance, SearchEngine, BackgroundKind } from '@/lib/store/types';
 import { WIDGET_REGISTRY } from '@/components/widgets/registry';
-import { saveSecret } from '@/lib/store/secrets';
+import { saveSecret, deleteSecret } from '@/lib/store/secrets';
 
 export interface SettingsPanelProps {
   open: boolean;
@@ -18,6 +18,8 @@ export interface SettingsPanelProps {
 
 export function SettingsPanel({ open, settings, userName, weatherCity, githubUsername = '', background, widgets, onClose, onChange }: SettingsPanelProps) {
   const [patInput, setPatInput] = useState('');
+  const [openaiKeyInput, setOpenaiKeyInput] = useState('');
+  const [anthropicKeyInput, setAnthropicKeyInput] = useState('');
 
   if (!open) return null;
   function setSetting<K extends keyof Settings>(key: K, value: Settings[K]) {
@@ -92,6 +94,61 @@ export function SettingsPanel({ open, settings, userName, weatherCity, githubUse
             disabled={!patInput}
           >
             save
+          </button>
+        </div>
+
+        {/* AI API keys */}
+        <span className="glance-label">ai api keys</span>
+        <div className="flex gap-2">
+          <input
+            type="password"
+            className="glance-input flex-1"
+            placeholder="OpenAI API key (sk-...)"
+            aria-label="openai api key"
+            value={openaiKeyInput}
+            onChange={(e) => setOpenaiKeyInput(e.target.value)}
+            autoComplete="new-password"
+          />
+          <button
+            type="button"
+            className="glance-chip text-xs"
+            onClick={async () => { await saveSecret('openai_api_key', openaiKeyInput); setOpenaiKeyInput(''); }}
+            disabled={!openaiKeyInput}
+          >
+            save
+          </button>
+          <button
+            type="button"
+            className="glance-chip text-xs"
+            onClick={async () => { await deleteSecret('openai_api_key'); }}
+          >
+            clear
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="password"
+            className="glance-input flex-1"
+            placeholder="Anthropic API key (sk-ant-...)"
+            aria-label="anthropic api key"
+            value={anthropicKeyInput}
+            onChange={(e) => setAnthropicKeyInput(e.target.value)}
+            autoComplete="new-password"
+          />
+          <button
+            type="button"
+            className="glance-chip text-xs"
+            onClick={async () => { await saveSecret('anthropic_api_key', anthropicKeyInput); setAnthropicKeyInput(''); }}
+            disabled={!anthropicKeyInput}
+          >
+            save
+          </button>
+          <button
+            type="button"
+            className="glance-chip text-xs"
+            onClick={async () => { await deleteSecret('anthropic_api_key'); }}
+          >
+            clear
           </button>
         </div>
 
