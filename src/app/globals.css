@@ -404,6 +404,9 @@ main { position: relative; z-index: 1; }
   .glance-colon { animation: none; }
   .glance-skeleton { animation: none; }
   .glance-aurora-bg { animation: none; }
+  .glance-palette { transition: none; }
+  .glance-palette.is-open { transform: none; opacity: 1; }
+  .glance-sheet { animation: none; }
 }
 
 /* ---------- Search hero ---------- */
@@ -451,6 +454,11 @@ main { position: relative; z-index: 1; }
   backdrop-filter: blur(3px);
   display: flex; justify-content: flex-end;
 }
+/* ---------- Sheet slide-in animation (VISW-07) ---------- */
+@keyframes glance-sheet-slide-in {
+  from { transform: translateX(40px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
 .glance-sheet {
   width: min(420px, 92vw);
   height: 100%;
@@ -461,6 +469,7 @@ main { position: relative; z-index: 1; }
   backdrop-filter: blur(16px);
   border-left: 1px solid var(--glance-border);
   box-shadow: -24px 0 60px -24px rgba(0,0,0,0.9);
+  animation: glance-sheet-slide-in 0.25s cubic-bezier(.2,.7,.2,1) both;
 }
 .glance-sheet-wide { width: min(720px, 96vw); }
 .glance-field-row {
@@ -537,8 +546,17 @@ select.glance-field { background-color: var(--glance-bg); color: var(--glance-te
   /* position at ~18vh from top */
   margin-top: 18vh;
   margin-bottom: auto;
+  opacity: 0;
+  transform: scale(0.96) translateY(-8px);
+  transition: opacity 0.22s cubic-bezier(.2,.7,.2,1),
+              transform 0.22s cubic-bezier(.2,.7,.2,1);
 }
 .glance-palette[open] { display: flex; }
+/* ---------- Command palette entrance/exit transition (VISW-07) ---------- */
+.glance-palette.is-open {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
 .glance-palette::backdrop {
   background: color-mix(in oklab, #000 55%, transparent);
   backdrop-filter: blur(3px);
