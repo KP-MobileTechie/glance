@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CommandPalette } from './CommandPalette';
 
@@ -150,5 +150,143 @@ describe('CommandPalette', () => {
   it('PROD-07: "search" query surfaces change-search-engine commands', () => {
     renderPalette({ open: true, query: 'search' });
     expect(screen.getByText('change search engine: google')).toBeInTheDocument();
+  });
+
+  describe('VISW-07: is-open class toggle via rAF + transitionend close guard', () => {
+    // Helper: define showModal on a dialog instance (jsdom doesn't implement it on instances)
+    function stubShowModal(dialog: HTMLDialogElement) {
+      const spy = vi.fn();
+      Object.defineProperty(dialog, 'showModal', {
+        value: spy,
+        writable: true,
+        configurable: true,
+      });
+      return spy;
+    }
+
+    it('calls showModal() when open prop is true', () => {
+      const { rerender } = render(
+        <CommandPalette
+          open={false}
+          onClose={vi.fn()}
+          commands={makeCommands()}
+          query=""
+          onQueryChange={vi.fn()}
+          onAddTask={vi.fn()}
+        />
+      );
+      const dialog = document.querySelector('dialog')!;
+      const showModalSpy = stubShowModal(dialog);
+      rerender(
+        <CommandPalette
+          open={true}
+          onClose={vi.fn()}
+          commands={makeCommands()}
+          query=""
+          onQueryChange={vi.fn()}
+          onAddTask={vi.fn()}
+        />
+      );
+      expect(showModalSpy).toHaveBeenCalled();
+    });
+
+    it('adds is-open class via requestAnimationFrame when open goes true', async () => {
+      vi.useFakeTimers();
+      const { rerender } = render(
+        <CommandPalette
+          open={false}
+          onClose={vi.fn()}
+          commands={makeCommands()}
+          query=""
+          onQueryChange={vi.fn()}
+          onAddTask={vi.fn()}
+        />
+      );
+      const dialog = document.querySelector('dialog')!;
+      stubShowModal(dialog);
+      rerender(
+        <CommandPalette
+          open={true}
+          onClose={vi.fn()}
+          commands={makeCommands()}
+          query=""
+          onQueryChange={vi.fn()}
+          onAddTask={vi.fn()}
+        />
+      );
+      // Before rAF flush, is-open should not be present
+      expect(dialog.classList.contains('is-open')).toBe(false);
+      // Flush rAF
+      await act(async () => { vi.runAllTimers(); });
+      expect(dialog.classList.contains('is-open')).toBe(true);
+      vi.useRealTimers();
+    });
+
+    it('removes is-open class when open prop goes false', async () => {
+      vi.useFakeTimers();
+      const { rerender } = render(
+        <CommandPalette
+          open={true}
+          onClose={vi.fn()}
+          commands={makeCommands()}
+          query=""
+          onQueryChange={vi.fn()}
+          onAddTask={vi.fn()}
+        />
+      );
+      const dialog = document.querySelector('dialog')!;
+      stubShowModal(dialog);
+      // Flush rAF so is-open is added
+      await act(async () => { vi.runAllTimers(); });
+      expect(dialog.classList.contains('is-open')).toBe(true);
+      // Now close
+      rerender(
+        <CommandPalette
+          open={false}
+          onClose={vi.fn()}
+          commands={makeCommands()}
+          query=""
+          onQueryChange={vi.fn()}
+          onAddTask={vi.fn()}
+        />
+      );
+      expect(dialog.classList.contains('is-open')).toBe(false);
+      vi.useRealTimers();
+    });
+
+    it('attaches transitionend listener when open goes false and dialog.open is true', async () => {
+      vi.useFakeTimers();
+      const { rerender } = render(
+        <CommandPalette
+          open={true}
+          onClose={vi.fn()}
+          commands={makeCommands()}
+          query=""
+          onQueryChange={vi.fn()}
+          onAddTask={vi.fn()}
+        />
+      );
+      const dialog = document.querySelector('dialog')!;
+      stubShowModal(dialog);
+      await act(async () => { vi.runAllTimers(); });
+      // Simulate dialog.open = true
+      Object.defineProperty(dialog, 'open', { value: true, writable: true, configurable: true });
+      const addEventSpy = vi.spyOn(dialog, 'addEventListener');
+      rerender(
+        <CommandPalette
+          open={false}
+          onClose={vi.fn()}
+          commands={makeCommands()}
+          query=""
+          onQueryChange={vi.fn()}
+          onAddTask={vi.fn()}
+        />
+      );
+      const transitionEndCall = addEventSpy.mock.calls.find(
+        (call) => call[0] === 'transitionend'
+      );
+      expect(transitionEndCall).toBeDefined();
+      vi.useRealTimers();
+    });
   });
 });

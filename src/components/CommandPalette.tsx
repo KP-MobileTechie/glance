@@ -50,7 +50,7 @@ export function CommandPalette({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [selectedIdx, setSelectedIdx] = useState(0);
 
-  // Show/hide native dialog
+  // Show/hide native dialog with is-open class toggle for CSS transition
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
@@ -58,9 +58,21 @@ export function CommandPalette({
       if (!dialog.open) {
         try { dialog.showModal(); } catch { /* already open */ }
       }
+      // rAF ensures is-open is added after the dialog's initial paint,
+      // enabling the CSS transition to play from the hidden start state
+      const raf = requestAnimationFrame(() => {
+        dialog.classList.add('is-open');
+      });
+      return () => cancelAnimationFrame(raf);
     } else {
+      dialog.classList.remove('is-open');
       if (dialog.open) {
-        dialog.close();
+        // Wait for the exit transition before closing
+        const onEnd = () => {
+          dialog.close();
+          dialog.removeEventListener('transitionend', onEnd);
+        };
+        dialog.addEventListener('transitionend', onEnd, { once: true });
       }
     }
   }, [open]);
