@@ -45,6 +45,7 @@ export function SearchBar({ engine, onNavigate }: SearchBarProps) {
         <input
           ref={ref}
           type="search"
+          name="q"
           role="searchbox"
           aria-label="search"
           placeholder="search the web, or type a url"

@@ -1,5 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
+
+function weatherIcon(label: string): string {
+  const l = label.toLowerCase();
+  if (l.includes('clear') || l.includes('sunny')) return '☀️';
+  if (l.includes('few clouds') || l.includes('partly')) return '⛅';
+  if (l.includes('cloud') || l.includes('overcast')) return '☁️';
+  if (l.includes('rain') || l.includes('drizzle') || l.includes('shower')) return '🌧️';
+  if (l.includes('thunder') || l.includes('storm')) return '⛈️';
+  if (l.includes('snow') || l.includes('sleet')) return '❄️';
+  if (l.includes('mist') || l.includes('fog') || l.includes('haze')) return '🌫️';
+  return '🌡️';
+}
 import type { WidgetProps } from './ClockWidget';
 import { fetchWeather, fetchWeatherByCity, type Weather } from '@/lib/weather/weather';
 import { quoteOfDay } from '@/lib/quotes/quotes';
@@ -75,7 +87,7 @@ export function WeatherQuoteWidget({ state, onChange }: WidgetProps) {
               <span style={{ color: 'var(--glance-accent)', fontSize: '1.6rem', fontWeight: 300, textShadow: '0 0 18px var(--glance-accent-glow)' }}>
                 {state.settings.tempUnit === 'F' ? Math.round(weather.tempC * 9 / 5 + 32) : weather.tempC}&deg;{state.settings.tempUnit}
               </span>
-              <span className="text-sm" style={{ color: 'var(--glance-muted)' }}>{weather.label}</span>
+              <span className="text-sm" style={{ color: 'var(--glance-muted)' }}><span className="mr-1">{weatherIcon(weather.label)}</span>{weather.label}</span>
             </>
           ) : status === 'geo-denied' ? (
             <span className="text-sm" style={{ color: 'var(--glance-muted)' }}>location access denied — enter a city below</span>

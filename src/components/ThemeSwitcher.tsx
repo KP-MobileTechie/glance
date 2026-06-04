@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BUILT_IN_THEMES } from '@/lib/theme/themes';
 import { decodeTheme } from '@/lib/theme/share';
 import type { Theme } from '@/lib/theme/types';
@@ -19,6 +19,21 @@ export function ThemeSwitcher({ activeId, onSelect, onImport, onPublish, customT
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
 
   function importCode() {
     const theme = decodeTheme(code.trim());
@@ -27,7 +42,7 @@ export function ThemeSwitcher({ activeId, onSelect, onImport, onPublish, customT
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button onClick={() => setOpen((o) => !o)} aria-label="themes" className="glance-chip">
         <IconPalette /> themes
       </button>

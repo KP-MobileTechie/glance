@@ -404,8 +404,7 @@ main { position: relative; z-index: 1; }
   .glance-colon { animation: none; }
   .glance-skeleton { animation: none; }
   .glance-aurora-bg { animation: none; }
-  .glance-palette { transition: none; }
-  .glance-palette.is-open { transform: none; opacity: 1; }
+  .glance-palette[open] { transition: none; }
   .glance-sheet { animation: none; }
 }
 
@@ -533,29 +532,32 @@ select.glance-field { background-color: var(--glance-bg); color: var(--glance-te
 
 /* ---------- Command Palette ---------- */
 .glance-palette {
-  background: var(--glance-surface);
+  background: color-mix(in oklab, var(--glance-bg) 88%, var(--glance-surface));
+  backdrop-filter: blur(12px) saturate(1.2);
   border: 1px solid var(--glance-border);
   border-radius: var(--glance-radius);
   padding: 0;
   width: min(560px, 92vw);
   max-height: 60vh;
   overflow: hidden;
-  display: flex;
+  display: none;
   flex-direction: column;
   box-shadow: 0 8px 32px color-mix(in oklab, #000 40%, transparent);
-  /* position at ~18vh from top */
   margin-top: 18vh;
   margin-bottom: auto;
-  opacity: 0;
-  transform: scale(0.96) translateY(-8px);
-  transition: opacity 0.22s cubic-bezier(.2,.7,.2,1),
-              transform 0.22s cubic-bezier(.2,.7,.2,1);
 }
-.glance-palette[open] { display: flex; }
-/* ---------- Command palette entrance/exit transition (VISW-07) ---------- */
-.glance-palette.is-open {
+/* VISW-07: enter via @starting-style, exit via allow-discrete so display/overlay transition */
+.glance-palette[open] {
+  display: flex;
   opacity: 1;
   transform: scale(1) translateY(0);
+  transition: opacity 0.22s cubic-bezier(.2,.7,.2,1),
+              transform 0.22s cubic-bezier(.2,.7,.2,1),
+              display 0.22s allow-discrete,
+              overlay 0.22s allow-discrete;
+}
+@starting-style {
+  .glance-palette[open] { opacity: 0; transform: scale(0.96) translateY(-8px); }
 }
 .glance-palette::backdrop {
   background: color-mix(in oklab, #000 55%, transparent);

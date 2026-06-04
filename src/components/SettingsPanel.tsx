@@ -99,57 +99,63 @@ export function SettingsPanel({ open, settings, userName, weatherCity, githubUse
 
         {/* AI API keys */}
         <span className="glance-label">ai api keys</span>
-        <div className="flex gap-2">
-          <input
-            type="password"
-            className="glance-input flex-1"
-            placeholder="OpenAI API key (sk-...)"
-            aria-label="openai api key"
-            value={openaiKeyInput}
-            onChange={(e) => setOpenaiKeyInput(e.target.value)}
-            autoComplete="new-password"
-          />
-          <button
-            type="button"
-            className="glance-chip text-xs"
-            onClick={async () => { await saveSecret('openai_api_key', openaiKeyInput); setOpenaiKeyInput(''); }}
-            disabled={!openaiKeyInput}
-          >
-            save
-          </button>
-          <button
-            type="button"
-            className="glance-chip text-xs"
-            onClick={async () => { await deleteSecret('openai_api_key'); }}
-          >
-            clear
-          </button>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs" style={{ opacity: 0.6 }}>OpenAI API Key</label>
+          <div className="flex gap-2">
+            <input
+              type="password"
+              className="glance-input flex-1"
+              placeholder="OpenAI API key (sk-...)"
+              aria-label="openai api key"
+              value={openaiKeyInput}
+              onChange={(e) => setOpenaiKeyInput(e.target.value)}
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              className="glance-chip text-xs"
+              onClick={async () => { await saveSecret('openai_api_key', openaiKeyInput); setOpenaiKeyInput(''); }}
+              disabled={!openaiKeyInput}
+            >
+              save
+            </button>
+            <button
+              type="button"
+              className="glance-chip text-xs"
+              onClick={async () => { await deleteSecret('openai_api_key'); }}
+            >
+              clear
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <input
-            type="password"
-            className="glance-input flex-1"
-            placeholder="Anthropic API key (sk-ant-...)"
-            aria-label="anthropic api key"
-            value={anthropicKeyInput}
-            onChange={(e) => setAnthropicKeyInput(e.target.value)}
-            autoComplete="new-password"
-          />
-          <button
-            type="button"
-            className="glance-chip text-xs"
-            onClick={async () => { await saveSecret('anthropic_api_key', anthropicKeyInput); setAnthropicKeyInput(''); }}
-            disabled={!anthropicKeyInput}
-          >
-            save
-          </button>
-          <button
-            type="button"
-            className="glance-chip text-xs"
-            onClick={async () => { await deleteSecret('anthropic_api_key'); }}
-          >
-            clear
-          </button>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs" style={{ opacity: 0.6 }}>Anthropic API Key</label>
+          <div className="flex gap-2">
+            <input
+              type="password"
+              className="glance-input flex-1"
+              placeholder="Anthropic API key (sk-ant-...)"
+              aria-label="anthropic api key"
+              value={anthropicKeyInput}
+              onChange={(e) => setAnthropicKeyInput(e.target.value)}
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              className="glance-chip text-xs"
+              onClick={async () => { await saveSecret('anthropic_api_key', anthropicKeyInput); setAnthropicKeyInput(''); }}
+              disabled={!anthropicKeyInput}
+            >
+              save
+            </button>
+            <button
+              type="button"
+              className="glance-chip text-xs"
+              onClick={async () => { await deleteSecret('anthropic_api_key'); }}
+            >
+              clear
+            </button>
+          </div>
         </div>
 
         <label className="glance-field-row">search engine

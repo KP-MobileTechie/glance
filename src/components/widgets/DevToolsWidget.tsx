@@ -42,6 +42,7 @@ export function DevToolsWidget({ state: _state, onChange: _onChange }: WidgetPro
 
   return (
     <div className="h-full flex flex-col gap-2">
+      <div className="glance-label">dev tools</div>
       {/* Tab bar */}
       <div className="flex gap-1 flex-wrap">
         {(['json', 'base64', 'uuid', 'regex'] as DevTool[]).map((tool) => (

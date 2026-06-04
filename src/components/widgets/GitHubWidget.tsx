@@ -92,6 +92,7 @@ export function GitHubWidget({ state, onChange: _onChange }: WidgetProps) {
 
   return (
     <div className="h-full flex flex-col gap-2">
+      <div className="glance-label">github activity</div>
       {/* Contribution graph */}
       {contributions && (
         <div

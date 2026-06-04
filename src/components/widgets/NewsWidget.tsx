@@ -43,6 +43,7 @@ export function NewsWidget({ state, onChange }: WidgetProps) {
 
   return (
     <div className="h-full flex flex-col gap-2">
+      <div className="glance-label">hacker news</div>
       {status === 'loading' ? (
         <span
           className="glance-skeleton inline-block"

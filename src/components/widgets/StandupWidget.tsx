@@ -143,6 +143,7 @@ export function StandupWidget({ state, onChange: _onChange }: WidgetProps) {
 
   return (
     <div className="h-full flex flex-col gap-2">
+      <div className="glance-label">daily standup</div>
       <div className="flex gap-2 items-center">
         <button
           type="button"

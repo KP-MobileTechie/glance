@@ -29,15 +29,18 @@ export function ClockWidget({ state, now }: WidgetProps & { now?: Date }) {
   const ss = String(time.getSeconds()).padStart(2, '0');
   const name = state.userName ? `, ${state.userName}` : '';
   return (
-    <div className="flex h-full flex-col items-center justify-center text-center">
-      <div className="glance-clock">
-        <span className="glance-hhmm">{hh}<span className="glance-colon">:</span>{mm}</span>
-        {showSeconds && <span className="sec">{ss}</span>}
-        {!clock24h && <span className="sec">{meridiem}</span>}
+    <div className="flex h-full flex-col gap-2">
+      <div className="glance-label">clock</div>
+      <div className="flex flex-1 flex-col items-center justify-center text-center">
+        <div className="glance-clock">
+          <span className="glance-hhmm">{hh}<span className="glance-colon">:</span>{mm}</span>
+          {showSeconds && <span className="sec">{ss}</span>}
+          {!clock24h && <span className="sec">{meridiem}</span>}
+        </div>
+        <p className="glance-greet mt-3">
+          {greeting(time.getHours())}{name}
+        </p>
       </div>
-      <p className="glance-greet mt-3">
-        {greeting(time.getHours())}{name}
-      </p>
     </div>
   );
 }

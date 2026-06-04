@@ -139,7 +139,7 @@ export function FocusWidget({ state, onChange }: WidgetProps) {
 
       {/* List tab strip */}
       <div className="flex flex-wrap gap-1.5">
-        {state.todoLists.map((list) => (
+        {(state.todoLists ?? []).map((list) => (
           <div key={list.id} className="flex items-center gap-0.5">
             {renamingListId === list.id ? (
               <input

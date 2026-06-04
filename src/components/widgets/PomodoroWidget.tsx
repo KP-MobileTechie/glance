@@ -73,6 +73,7 @@ export function PomodoroWidget({ state, onChange }: WidgetProps) {
 
   return (
     <div className="h-full flex flex-col gap-2 p-1">
+      <div className="glance-label">pomodoro</div>
       {/* Countdown */}
       <div style={{ color: 'var(--glance-accent)', fontSize: '2rem', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
         {mm}:{ss}

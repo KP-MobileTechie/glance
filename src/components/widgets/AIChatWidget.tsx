@@ -134,6 +134,7 @@ export function AIChatWidget({ state: _state, onChange: _onChange }: WidgetProps
 
   return (
     <div className="h-full flex flex-col gap-2">
+      <div className="glance-label">ai chat</div>
       {/* Message list */}
       <div className="flex-1 overflow-y-auto flex flex-col gap-2 min-h-0">
         {historyRef.current.map((msg, i) => (
