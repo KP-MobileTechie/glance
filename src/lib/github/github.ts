@@ -81,6 +81,35 @@ export async function fetchGitHubStats(login: string, token: string): Promise<Gi
   return { openPRCount: prs.total_count, recentCommits };
 }
 
+/**
+ * Fetches commit messages from GitHub PushEvents for a specific date.
+ * dateStr should be in 'YYYY-MM-DD' format.
+ * Returns an empty array on any error or if login is empty.
+ */
+export async function fetchYesterdayCommits(login: string, token: string, dateStr: string): Promise<string[]> {
+  if (!login) return [];
+
+  type GitHubEvent = {
+    type: string;
+    created_at: string;
+    payload: { commits?: Array<{ message: string }> };
+  };
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/users/${encodeURIComponent(login)}/events?per_page=100`,
+      { headers: { 'Authorization': `Bearer ${token}` } },
+    );
+    if (!res.ok) return [];
+    const events = (await res.json()) as GitHubEvent[];
+    return events
+      .filter((e) => e.type === 'PushEvent' && e.created_at.startsWith(dateStr))
+      .flatMap((e) => e.payload.commits?.map((c) => c.message) ?? []);
+  } catch {
+    return [];
+  }
+}
+
 const GITHUB_COLOR_LEVELS: Record<string, number> = {
   '#ebedf0': 0,
   '#9be9a8': 20,
