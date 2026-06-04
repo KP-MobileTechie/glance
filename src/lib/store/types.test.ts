@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { defaultState, migrateState, WIDGET_KINDS } from './types';
+import type { BackgroundKind } from './types';
 
 describe('defaultState', () => {
   it('creates one widget instance per kind with unique ids', () => {
@@ -108,6 +109,37 @@ describe('Phase 3 widget defaults and migration', () => {
   it('migrateState preserves valid hnConfig.count', () => {
     const result = migrateState({ hnConfig: { count: 20, rssUrl: null } });
     expect(result.hnConfig.count).toBe(20);
+  });
+});
+
+describe('BackgroundKind — defaultState and migrateState', () => {
+  it('defaultState().background equals "none"', () => {
+    expect(defaultState().background).toBe('none');
+  });
+
+  it('migrateState({}).background equals "none" (missing field)', () => {
+    expect(migrateState({}).background).toBe('none');
+  });
+
+  it('migrateState({ background: "aurora" }).background equals "aurora"', () => {
+    expect(migrateState({ background: 'aurora' }).background).toBe('aurora');
+  });
+
+  it('migrateState({ background: "particles" }).background equals "particles"', () => {
+    expect(migrateState({ background: 'particles' }).background).toBe('particles');
+  });
+
+  it('migrateState({ background: "invalid-value" }).background coerces to "none"', () => {
+    expect(migrateState({ background: 'invalid-value' }).background).toBe('none');
+  });
+
+  it('migrateState({ background: 42 }).background coerces to "none"', () => {
+    expect(migrateState({ background: 42 }).background).toBe('none');
+  });
+
+  it('BackgroundKind type is exported with three valid members', () => {
+    const valid: BackgroundKind[] = ['none', 'aurora', 'particles'];
+    expect(valid).toHaveLength(3);
   });
 });
 

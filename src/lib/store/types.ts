@@ -56,6 +56,8 @@ export interface HNConfig {
   rssUrl: string | null; // null = use Algolia HN API
 }
 
+export type BackgroundKind = 'none' | 'aurora' | 'particles';
+
 export interface AppState {
   widgets: WidgetInstance[];
   themeId: string;
@@ -71,6 +73,7 @@ export interface AppState {
   pomodoroConfig: PomodoroConfig;
   hnConfig: HNConfig;
   githubUsername: string;
+  background: BackgroundKind;
   settings: Settings;
   updatedAt: number;
 }
@@ -109,6 +112,7 @@ export function defaultState(): AppState {
     pomodoroConfig: { workMin: 25, breakMin: 5 },
     hnConfig: { count: 10, rssUrl: null },
     githubUsername: '',
+    background: 'none',
     settings: { ...DEFAULT_SETTINGS },
     updatedAt: 0,
   };
@@ -211,6 +215,9 @@ export function migrateState(raw: unknown): AppState {
     pomodoroConfig: asPomodoroConfig(r.pomodoroConfig),
     hnConfig: asHNConfig(r.hnConfig),
     githubUsername: typeof r.githubUsername === 'string' ? r.githubUsername : '',
+    background: (r.background === 'aurora' || r.background === 'particles')
+      ? r.background as BackgroundKind
+      : 'none',
     settings: asSettings(r.settings),
     updatedAt: typeof r.updatedAt === 'number' ? r.updatedAt : 0,
   };
