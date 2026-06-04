@@ -143,6 +143,71 @@ describe('BackgroundKind — defaultState and migrateState', () => {
   });
 });
 
+describe('Phase 5 AI widget defaults and migration', () => {
+  // T-AIFT-06a: standup is hidden by default
+  it('T-AIFT-06a: defaultState standup widget has hidden:true', () => {
+    const s = defaultState();
+    const w = s.widgets.find((x) => x.kind === 'standup');
+    expect(w).toBeDefined();
+    expect(w!.hidden).toBe(true);
+  });
+
+  // T-AIFT-06b: aichat is hidden by default
+  it('T-AIFT-06b: defaultState aichat widget has hidden:true', () => {
+    const s = defaultState();
+    const w = s.widgets.find((x) => x.kind === 'aichat');
+    expect(w).toBeDefined();
+    expect(w!.hidden).toBe(true);
+  });
+
+  // T-AIFT-06c: WIDGET_KINDS has 10 entries
+  it('T-AIFT-06c: WIDGET_KINDS.length === 10', () => {
+    expect(WIDGET_KINDS.length).toBe(10);
+  });
+
+  // T-AIFT-06d: migrateState backfills standup hidden:true for pre-Phase-5 state
+  it('T-AIFT-06d: migrateState on pre-Phase-5 state backfills standup with hidden:true', () => {
+    const prePhase5 = {
+      widgets: [
+        { id: 'a', kind: 'clock', span: { w: 4, h: 3 }, hidden: false },
+        { id: 'b', kind: 'focus', span: { w: 4, h: 3 }, hidden: false },
+      ],
+    };
+    const result = migrateState(prePhase5);
+    const w = result.widgets.find((x) => x.kind === 'standup');
+    expect(w).toBeDefined();
+    expect(w!.hidden).toBe(true);
+  });
+
+  // T-AIFT-06e: migrateState backfills aichat hidden:true for pre-Phase-5 state
+  it('T-AIFT-06e: migrateState on pre-Phase-5 state backfills aichat with hidden:true', () => {
+    const prePhase5 = {
+      widgets: [
+        { id: 'a', kind: 'clock', span: { w: 4, h: 3 }, hidden: false },
+        { id: 'b', kind: 'focus', span: { w: 4, h: 3 }, hidden: false },
+      ],
+    };
+    const result = migrateState(prePhase5);
+    const w = result.widgets.find((x) => x.kind === 'aichat');
+    expect(w).toBeDefined();
+    expect(w!.hidden).toBe(true);
+  });
+
+  // T-AIFT-06f: migrateState preserves existing widget visible states
+  it('T-AIFT-06f: migrateState preserves existing widget hidden:false for clock', () => {
+    const prePhase5 = {
+      widgets: [
+        { id: 'a', kind: 'clock', span: { w: 4, h: 3 }, hidden: false },
+        { id: 'b', kind: 'focus', span: { w: 4, h: 3 }, hidden: false },
+      ],
+    };
+    const result = migrateState(prePhase5);
+    const w = result.widgets.find((x) => x.kind === 'clock');
+    expect(w).toBeDefined();
+    expect(w!.hidden).toBe(false);
+  });
+});
+
 describe('migrateState — todoLists and activeTodoListId', () => {
   // Test C: migration from legacy state seeds the default list
   it('seeds default todoList from legacy todos array when no todoLists exist', () => {

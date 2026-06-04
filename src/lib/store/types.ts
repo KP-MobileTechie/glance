@@ -1,6 +1,6 @@
 import type { Theme } from '@/lib/theme/types';
 
-export const WIDGET_KINDS = ['clock', 'focus', 'bookmarks', 'weatherQuote', 'pomodoro', 'news', 'github', 'devTools'] as const;
+export const WIDGET_KINDS = ['clock', 'focus', 'bookmarks', 'weatherQuote', 'pomodoro', 'news', 'github', 'devTools', 'standup', 'aichat'] as const;
 export type WidgetKind = (typeof WIDGET_KINDS)[number];
 
 export interface WidgetSpan { w: number; h: number; }
@@ -87,9 +87,11 @@ const DEFAULT_SPAN: Record<WidgetKind, WidgetSpan> = {
   news: { w: 4, h: 3 },
   github: { w: 8, h: 3 },
   devTools: { w: 4, h: 3 },
+  standup: { w: 4, h: 3 },
+  aichat: { w: 4, h: 4 },
 };
 
-const HIDDEN_BY_DEFAULT = new Set<WidgetKind>(['pomodoro', 'news', 'github', 'devTools']);
+const HIDDEN_BY_DEFAULT = new Set<WidgetKind>(['pomodoro', 'news', 'github', 'devTools', 'standup', 'aichat']);
 
 export function defaultState(): AppState {
   return {
