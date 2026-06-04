@@ -8,7 +8,7 @@ function setup(overrides: Record<string, unknown> = {}) {
   const s = defaultState();
   const onChange = vi.fn();
   render(
-    <SettingsPanel open settings={s.settings} userName={s.userName} weatherCity={null} widgets={s.widgets} onClose={() => {}} onChange={onChange} {...overrides} />,
+    <SettingsPanel open settings={s.settings} userName={s.userName} weatherCity={null} background={s.background} widgets={s.widgets} onClose={() => {}} onChange={onChange} {...overrides} />,
   );
   return { onChange };
 }
@@ -16,7 +16,7 @@ function setup(overrides: Record<string, unknown> = {}) {
 describe('SettingsPanel', () => {
   it('renders nothing when closed', () => {
     const { container } = render(
-      <SettingsPanel open={false} settings={defaultState().settings} userName="" widgets={defaultState().widgets} onClose={() => {}} onChange={() => {}} />,
+      <SettingsPanel open={false} settings={defaultState().settings} userName="" weatherCity={null} background={defaultState().background} widgets={defaultState().widgets} onClose={() => {}} onChange={() => {}} />,
     );
     expect(container).toBeEmptyDOMElement();
   });
@@ -45,5 +45,28 @@ describe('SettingsPanel', () => {
     const input = screen.getByPlaceholderText(/auto.*geolocation/i);
     fireEvent.change(input, { target: { value: 'Tokyo' } });
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ weatherCity: 'Tokyo' }));
+  });
+
+  it('renders the animated background select with the current value', () => {
+    setup({ background: 'aurora' });
+    const select = screen.getByRole('combobox', { name: /animated background/i });
+    expect(select).toBeInTheDocument();
+    expect((select as HTMLSelectElement).value).toBe('aurora');
+  });
+
+  it('animated background select has exactly three options: none, aurora wave, particles', () => {
+    setup({ background: 'none' });
+    const select = screen.getByRole('combobox', { name: /animated background/i });
+    const options = Array.from((select as HTMLSelectElement).options);
+    expect(options).toHaveLength(3);
+    expect(options.map((o) => o.value)).toEqual(['none', 'aurora', 'particles']);
+    expect(options.map((o) => o.text)).toEqual(['none', 'aurora wave', 'particles']);
+  });
+
+  it('changing animated background select calls onChange with correct BackgroundKind', () => {
+    const { onChange } = setup({ background: 'none' });
+    const select = screen.getByRole('combobox', { name: /animated background/i });
+    fireEvent.change(select, { target: { value: 'particles' } });
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ background: 'particles' }));
   });
 });

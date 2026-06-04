@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import type { AppState, Settings, WidgetInstance, SearchEngine } from '@/lib/store/types';
+import type { AppState, Settings, WidgetInstance, SearchEngine, BackgroundKind } from '@/lib/store/types';
 import { WIDGET_REGISTRY } from '@/components/widgets/registry';
 import { saveSecret } from '@/lib/store/secrets';
 
@@ -10,12 +10,13 @@ export interface SettingsPanelProps {
   userName: string;
   weatherCity: string | null;
   githubUsername?: string;
+  background: BackgroundKind;
   widgets: WidgetInstance[];
   onClose: () => void;
   onChange: (patch: Partial<AppState>) => void;
 }
 
-export function SettingsPanel({ open, settings, userName, weatherCity, githubUsername = '', widgets, onClose, onChange }: SettingsPanelProps) {
+export function SettingsPanel({ open, settings, userName, weatherCity, githubUsername = '', background, widgets, onClose, onChange }: SettingsPanelProps) {
   const [patInput, setPatInput] = useState('');
 
   if (!open) return null;
@@ -101,6 +102,19 @@ export function SettingsPanel({ open, settings, userName, weatherCity, githubUse
             <option value="duckduckgo">DuckDuckGo</option>
             <option value="bing">Bing</option>
             <option value="brave">Brave</option>
+          </select>
+        </label>
+
+        <label className="glance-field-row">animated background
+          <select
+            className="glance-field"
+            aria-label="animated background"
+            value={background}
+            onChange={(e) => onChange({ background: e.target.value as BackgroundKind })}
+          >
+            <option value="none">none</option>
+            <option value="aurora">aurora wave</option>
+            <option value="particles">particles</option>
           </select>
         </label>
 
