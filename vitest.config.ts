@@ -9,6 +9,11 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     exclude: ['e2e/**', 'node_modules/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      exclude: ['e2e/**', 'node_modules/**', '*.config.*'],
+    },
   },
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
 });
