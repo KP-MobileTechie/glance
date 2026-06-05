@@ -31,10 +31,13 @@ Open http://localhost:3000 to use Glance. The marketing page lives at /welcome.
 
 ## Scripts
 
-- `npm run dev` start the dev server
-- `npm run build` production build
-- `npm run test` run unit and component tests (Vitest)
-- `npm run e2e` run end to end tests (Playwright)
+- `npm run dev` — start the dev server
+- `npm run build` — production build
+- `npm run start` — serve the production build
+- `npm run lint` — lint the codebase
+- `npm run test` — run unit and component tests (Vitest)
+- `npm run test:watch` — run tests in watch mode
+- `npm run e2e` — run end-to-end tests (Playwright)
 
 ## License
 
