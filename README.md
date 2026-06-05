@@ -27,7 +27,9 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000 to use Glance. The marketing page lives at /welcome.
+Open http://localhost:3000 to use Glance. The marketing/landing page lives at `/welcome`.
+
+> **Node.js 18+** is required. The project uses Next.js App Router with TypeScript strict mode.
 
 ## Scripts
 
